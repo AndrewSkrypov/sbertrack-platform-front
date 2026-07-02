@@ -25,6 +25,7 @@ import { SvgIconComponent } from '@mui/icons-material';
 import { CompetencyRadarChart, FunnelBlock, LineChartBlock, MetricGrid, PieChartBlock, BarChartBlock } from '../components/AnalyticsCharts';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
+import { GradientIcon } from '../components/GradientIcon';
 import { useApi } from '../hooks/useApi';
 import { AdminDashboard } from '../types';
 import { get, platformApi } from '../api/client';
@@ -52,7 +53,7 @@ export function AdminDashboardPage() {
   ];
   return (
     <Box>
-      <PageHeader title="Системная панель" subtitle="Управление участниками, организациями, кейсами, наставниками и системными метриками." />
+      <PageHeader hero title="Системная панель" subtitle="Управление участниками, организациями, кейсами, наставниками и системными метриками." />
       <Box sx={{ mb: 2 }}><MetricGrid metrics={data.analytics.metrics} /></Box>
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} lg={3}><PieChartBlock title="Пользователи по ролям" data={data.analytics.usersByRole} /></Grid>
@@ -63,16 +64,16 @@ export function AdminDashboardPage() {
       </Grid>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        {managementMetrics.map(({ label, value, Icon }) => (
+        {managementMetrics.map(({ label, value, Icon }, index) => (
           <Grid item xs={12} sm={6} md={3} key={label}>
             <Card>
               <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
                   <Box>
-                    <Typography variant="body2" color="text.secondary">{label}</Typography>
-                    <Typography variant="h4">{value}</Typography>
+                    <Typography variant="body2" color="text.secondary" fontWeight={700}>{label}</Typography>
+                    <Typography variant="h4" fontWeight={800}>{value}</Typography>
                   </Box>
-                  <Icon color="primary" />
+                  <GradientIcon icon={<Icon />} variant={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]} />
                 </Stack>
               </CardContent>
             </Card>

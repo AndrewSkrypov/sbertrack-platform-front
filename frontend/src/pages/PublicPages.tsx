@@ -6,6 +6,7 @@ import {
   CardContent,
   Chip,
   Container,
+  Divider,
   Grid,
   MenuItem,
   Paper,
@@ -23,13 +24,16 @@ import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
 import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
 import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
-import { FormEvent, useState } from 'react';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import { FormEvent, ReactNode, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { post } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
 import heroPlatform from '../assets/hero-platform.png';
 import { Role, StudentType, UserSession } from '../types';
 import { competencyDescriptions, competencyLabels } from '../shared/labels';
+import { BrandBackdrop } from '../components/BrandBackdrop';
+import { GradientIcon } from '../components/GradientIcon';
 
 const demoAccounts = [
   { label: 'Войти как студент', email: 'student@example.com' },
@@ -64,12 +68,31 @@ export function PublicLandingPage() {
       >
         <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', py: 4 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <LogoMark light />
+            <Typography 
+              variant="h5" 
+              fontWeight={900} 
+              sx={{ 
+                color: 'white', 
+                letterSpacing: '-0.01em',
+                fontFamily: '"SB Sans Display", sans-serif'
+              }}
+            >
+              Трек
+            </Typography>
             <Stack direction="row" spacing={1}>
-              <Button color="inherit" variant="outlined" onClick={() => navigate('/sign-in')} sx={{ color: 'white', borderColor: alpha('#fff', 0.5) }}>
+              <Button
+                variant="contained"
+                startIcon={<LoginRoundedIcon />}
+                onClick={() => navigate('/sign-in')}
+                sx={{ bgcolor: 'white', color: 'primary.dark', '&:hover': { bgcolor: alpha('#fff', 0.9) } }}
+              >
                 Войти
               </Button>
-              <Button variant="contained" color="secondary" onClick={() => navigate('/sign-up')}>
+              <Button
+                variant="outlined"
+                onClick={() => navigate('/sign-up')}
+                sx={{ bgcolor: alpha('#0066FF', 0.8), color: 'white', borderColor: alpha('#fff', 0.6), '&:hover': { borderColor: 'white', bgcolor: alpha('#fff', 0.8) } }}
+              >
                 Создать аккаунт
               </Button>
             </Stack>
@@ -80,7 +103,7 @@ export function PublicLandingPage() {
               sx={{ mb: 2, bgcolor: alpha('#fff', 0.16), color: 'white', border: `1px solid ${alpha('#fff', 0.24)}` }}
             />
             <Typography variant="h1" sx={{ fontSize: { xs: 42, md: 72 }, lineHeight: 1.02, mb: 2 }}>
-              СберТрек
+              Трек
             </Typography>
             <Typography variant="h5" sx={{ color: alpha('#fff', 0.88), maxWidth: 720, mb: 4 }}>
               Реальные кейсы от заказчиков, выбор маяка профессии, дорожная карта студента, ИИ-наставники и портфолио из реальных кейсов.
@@ -114,7 +137,7 @@ export function PublicLandingPage() {
       <Container maxWidth="xl" sx={{ py: 6 }}>
         <Grid container spacing={3}>
           <Grid item xs={12} lg={5}>
-            <Typography variant="h3">Как работает СберТрек</Typography>
+            <Typography variant="h3">Как работает Трек</Typography>
             <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 620 }}>
               Платформа ведёт участника не по случайному списку задач, а по понятной ветке роста: от вводных этапов до итоговой защиты и портфолио.
             </Typography>
@@ -126,9 +149,7 @@ export function PublicLandingPage() {
                   <Card sx={{ height: '100%' }}>
                     <CardContent>
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Box sx={{ width: 44, height: 44, borderRadius: 1, display: 'grid', placeItems: 'center', bgcolor: alpha(theme.palette.primary.main, 0.1), color: 'primary.main' }}>
-                          <Icon />
-                        </Box>
+                        <GradientIcon icon={<Icon />} variant={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]} />
                         <Typography variant="caption" color="text.secondary" fontWeight={900}>Шаг {index + 1}</Typography>
                       </Stack>
                       <Typography variant="h6" sx={{ mt: 2 }}>{title as string}</Typography>
@@ -158,6 +179,16 @@ export function PublicLandingPage() {
           ))}
         </Grid>
       </Container>
+
+      <Box component="footer" sx={{ position: 'relative', overflow: 'hidden', borderTop: 1, borderColor: 'divider' }}>
+        <BrandBackdrop preset="landing" />
+        <Container maxWidth="xl" sx={{ position: 'relative', py: 3 }}>
+          <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
+            <Typography variant="body2" color="text.secondary">Трек — демонстрационный прототип</Typography>
+            <Typography variant="body2" color="text.secondary">2026</Typography>
+          </Stack>
+        </Container>
+      </Box>
     </Box>
   );
 }
@@ -180,45 +211,92 @@ export function SignInPage() {
 
   return (
     <AuthPageFrame title="Вход" subtitle="Платформа практических кейсов и траекторий развития.">
-      <Grid container spacing={2.5}>
-        <Grid item xs={12} md={7}>
-          <Card variant="outlined" sx={{ boxShadow: 'none' }}>
-            <CardContent>
-              <Typography variant="h5">Обычный вход</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-                Введите данные своей учётной записи.
-              </Typography>
-              <Stack component="form" spacing={2} onSubmit={submit}>
-                {error && <Alert severity="error">{error}</Alert>}
-                <TextField label="Email" value={email} onChange={(event) => setEmail(event.target.value)} fullWidth required />
-                <TextField label="Пароль" type="password" value={password} onChange={(event) => setPassword(event.target.value)} fullWidth required />
-                <Button type="submit" variant="contained" startIcon={<LoginRoundedIcon />}>Войти</Button>
-              </Stack>
-            </CardContent>
-          </Card>
+      <Stack spacing={0.5} sx={{ mb: 3 }}>
+        <Typography variant="h5" fontWeight={900}>Обычный вход</Typography>
+        <Typography variant="body2" color="text.secondary">Введите данные своей учётной записи.</Typography>
+      </Stack>
+      <Stack component="form" spacing={2.5} onSubmit={submit} sx={{ maxWidth: 520 }}>
+        {error && <Alert severity="error">{error}</Alert>}
+        <FormField label="Email">
+          <TextField
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            fullWidth
+            required
+            type="email"
+            placeholder="name@example.com"
+          />
+        </FormField>
+        <FormField label="Пароль">
+          <TextField
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            fullWidth
+            required
+            type="password"
+            placeholder="••••••••"
+          />
+        </FormField>
+        <Button type="submit" variant="contained" size="large" startIcon={<LoginRoundedIcon />}>Войти</Button>
+        <Button component={RouterLink} to="/sign-up" startIcon={<PersonAddAltRoundedIcon />} color="inherit">
+          Создать аккаунт
+        </Button>
+      </Stack>
+
+      <Divider sx={{ my: 4 }}>
+        <Typography variant="caption" color="text.secondary" fontWeight={700}>ИЛИ ДЕМО-ДОСТУП</Typography>
+      </Divider>
+
+      <Stack spacing={1.25} sx={{ maxWidth: 520 }}>
+        <Typography variant="body2" color="text.secondary">
+          Демо-профили используют тестовый пароль — можно сразу посмотреть платформу с ролью.
+        </Typography>
+        <Grid container spacing={1.5}>
+          {demoAccounts.map((account) => (
+            <Grid item xs={12} sm={6} key={account.email}>
+              <Button
+                fullWidth
+                onClick={() => signIn(account.email)}
+                disableElevation
+                sx={{
+                  height: 88,
+                  borderRadius: 2,
+
+                  bgcolor: '#F8FAFC',
+                  border: '1px solid',
+                  borderColor: '#E5E7EB',
+
+                  color: '#111827',
+                  fontSize: '1.05rem',
+                  fontWeight: 700,
+                  textTransform: 'none',
+
+                  transition: 'all .2s ease',
+
+                  '&:hover': {
+                    bgcolor: '#F1F5F9',
+                    borderColor: '#CBD5E1',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 8px 24px rgba(15,23,42,.08)'
+                  }
+                }}
+              >
+                {account.label}
+              </Button>
+            </Grid>
+          ))}
         </Grid>
-        <Grid item xs={12} md={5}>
-          <Card sx={{ height: '100%', bgcolor: 'primary.light', boxShadow: 'none' }}>
-            <CardContent>
-              <Typography variant="h5">Демо-версия</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
-                Демо-доступы используют тестовый пароль.
-              </Typography>
-              <Stack spacing={1}>
-                {demoAccounts.map((account) => (
-                  <Button key={account.email} fullWidth variant="outlined" onClick={() => signIn(account.email)}>
-                    {account.label}
-                  </Button>
-                ))}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-      <Button component={RouterLink} to="/sign-up" startIcon={<PersonAddAltRoundedIcon />} sx={{ mt: 2 }}>
-        Создать аккаунт
-      </Button>
+      </Stack>
     </AuthPageFrame>
+  );
+}
+
+function FormField({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <Stack spacing={0.75}>
+      <Typography variant="body2" fontWeight={700} color="text.primary">{label}</Typography>
+      {children}
+    </Stack>
   );
 }
 
@@ -251,30 +329,49 @@ export function SignUpPage() {
 
   return (
     <AuthPageFrame title="Создать аккаунт" subtitle="Публичная регистрация открыта для студентов, школьников и заказчиков.">
-      <Card variant="outlined" sx={{ boxShadow: 'none' }}>
-        <CardContent>
-          <Stack component="form" spacing={2} onSubmit={submit}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <TextField label="ФИО" value={fullName} onChange={(event) => setFullName(event.target.value)} fullWidth required />
-            <TextField label="Email" value={email} onChange={(event) => setEmail(event.target.value)} fullWidth required />
-            <TextField select label="Роль" value={role} onChange={(event) => setRole(event.target.value as Role)} fullWidth>
-              <MenuItem value="STUDENT">Студент/школьник</MenuItem>
-              <MenuItem value="CUSTOMER">Заказчик</MenuItem>
+      <Stack component="form" spacing={2.5} onSubmit={submit} sx={{ maxWidth: 440 }}>
+        {error && <Alert severity="error">{error}</Alert>}
+
+        <FormField label="ФИО">
+          <TextField value={fullName} onChange={(event) => setFullName(event.target.value)} fullWidth required placeholder="Иван Иванов" />
+        </FormField>
+
+        <FormField label="Email">
+          <TextField value={email} onChange={(event) => setEmail(event.target.value)} fullWidth required type="email" placeholder="name@example.com" />
+        </FormField>
+
+        <Divider sx={{ my: 0.5 }} />
+
+        <FormField label="Роль">
+          <TextField select value={role} onChange={(event) => setRole(event.target.value as Role)} fullWidth>
+            <MenuItem value="STUDENT">Студент/школьник</MenuItem>
+            <MenuItem value="CUSTOMER">Заказчик</MenuItem>
+          </TextField>
+        </FormField>
+
+        {role === 'STUDENT' && (
+          <FormField label="Тип участника">
+            <TextField select value={studentType} onChange={(event) => setStudentType(event.target.value as StudentType)} fullWidth>
+              <MenuItem value="UNIVERSITY_STUDENT">Студент</MenuItem>
+              <MenuItem value="SCHOOL_STUDENT">Школьник</MenuItem>
             </TextField>
-            {role === 'STUDENT' && (
-              <TextField select label="Тип участника" value={studentType} onChange={(event) => setStudentType(event.target.value as StudentType)} fullWidth>
-                <MenuItem value="UNIVERSITY_STUDENT">Студент</MenuItem>
-                <MenuItem value="SCHOOL_STUDENT">Школьник</MenuItem>
-              </TextField>
-            )}
-            <TextField label={role === 'CUSTOMER' ? 'Организация' : 'Вуз или школа'} value={organizationName} onChange={(event) => setOrganizationName(event.target.value)} fullWidth />
-            <Button type="submit" variant="contained" startIcon={<PersonAddAltRoundedIcon />}>Создать аккаунт</Button>
-          </Stack>
-        </CardContent>
-      </Card>
-      <Button component={RouterLink} to="/sign-in" startIcon={<LoginRoundedIcon />} sx={{ mt: 2 }}>
-        Уже есть аккаунт? Войти
-      </Button>
+          </FormField>
+        )}
+
+        <FormField label={role === 'CUSTOMER' ? 'Организация' : 'Вуз или школа'}>
+          <TextField
+            value={organizationName}
+            onChange={(event) => setOrganizationName(event.target.value)}
+            fullWidth
+            placeholder={role === 'CUSTOMER' ? 'Название компании' : 'Необязательно'}
+          />
+        </FormField>
+
+        <Button type="submit" variant="contained" size="large" startIcon={<PersonAddAltRoundedIcon />}>Создать аккаунт</Button>
+        <Button component={RouterLink} to="/sign-in" startIcon={<LoginRoundedIcon />} color="inherit">
+          Уже есть аккаунт? Войти
+        </Button>
+      </Stack>
     </AuthPageFrame>
   );
 }
@@ -296,33 +393,46 @@ export function AccessDeniedPage() {
   );
 }
 
-function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
-  const theme = useTheme();
+function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', placeItems: 'center', bgcolor: 'background.default', p: 2 }}>
-      <Card sx={{ maxWidth: 1040, width: '100%', overflow: 'hidden' }}>
+    <Box sx={{ position: 'relative', minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2, overflow: 'hidden', background: 'radial-gradient(circle at 0% 100%, rgba(22,163,74,0.12), transparent 35%), radial-gradient(circle at 100% 0%, rgba(20,184,166,0.08), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eefbf7 50%, #f3faf7 100%)' }}>
+      <BrandBackdrop preset="auth" fixed />
+      <Card sx={{ position: 'relative', maxWidth: 1040, width: '100%', overflow: 'hidden' }}>
         <Grid container>
           <Grid item xs={12} md={5}>
             <Box
               sx={{
+                position: 'relative',
+                overflow: 'hidden',
                 height: '100%',
-                minHeight: 420,
+                minHeight: 460,
                 p: 4,
                 color: 'white',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                background: `linear-gradient(145deg, ${theme.palette.primary.dark}, #0f766e 58%, ${theme.palette.secondary.dark})`
+                background: 'linear-gradient(150deg, #075747 0%, #0b7a64 58%, #16803c 100%)'
               }}
             >
-              <LogoMark light />
-              <Box>
+              <Box aria-hidden sx={{ position: 'absolute', right: -90, top: -90, width: 260, height: 260, borderRadius: '50%', background: alpha('#fff', 0.08) }} />
+              <Box aria-hidden sx={{ position: 'absolute', left: -70, bottom: -110, width: 240, height: 240, borderRadius: '50%', background: alpha('#fff', 0.06) }} />
+              <Box sx={{ position: 'relative' }}><LogoMark light /></Box>
+              <Box sx={{ position: 'relative' }}>
                 <Typography variant="h3" sx={{ mb: 1 }}>{title}</Typography>
                 <Typography sx={{ color: alpha('#fff', 0.82), maxWidth: 360 }}>{subtitle}</Typography>
               </Box>
-              <Typography variant="body2" sx={{ color: alpha('#fff', 0.72) }}>
-                СберТрек помогает участнику двигаться по траектории развития, собирать портфолио и получать содержательную обратную связь.
-              </Typography>
+              <Stack spacing={1.25} sx={{ position: 'relative' }}>
+                {[
+                  'Траектория развития до «маяка профессии»',
+                  'Портфолио из реальных кейсов',
+                  'ИИ-наставники и содержательная обратная связь'
+                ].map((line) => (
+                  <Stack key={line} direction="row" spacing={1.25} alignItems="center">
+                    <CheckCircleRoundedIcon sx={{ fontSize: 20, color: alpha('#fff', 0.9) }} />
+                    <Typography variant="body2" sx={{ color: alpha('#fff', 0.9) }}>{line}</Typography>
+                  </Stack>
+                ))}
+              </Stack>
             </Box>
           </Grid>
           <Grid item xs={12} md={7}>
@@ -337,25 +447,36 @@ function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle:
 function LogoMark({ light = false }: { light?: boolean }) {
   return (
     <Stack direction="row" spacing={1.25} alignItems="center">
-      <Box
+      {/* <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 1,
+          width: 44,
+          height: 44,
+          borderRadius: 2,
           display: 'grid',
           placeItems: 'center',
           fontWeight: 900,
-          bgcolor: light ? alpha('#fff', 0.16) : 'primary.light',
-          color: light ? 'white' : 'primary.main',
-          border: light ? `1px solid ${alpha('#fff', 0.24)}` : 'none'
+          color: 'white',
+          // На тёмном фоне — белая стеклянная плашка; на светлом — фирменный
+          // градиент (тот же язык, что у hero-блоков и иконок платформы).
+          background: light ? alpha('#fff', 0.16) : 'linear-gradient(135deg, #075747 0%, #0b7a64 60%, #16803c 100%)',
+          border: light ? `1px solid ${alpha('#fff', 0.28)}` : 'none',
+          boxShadow: light ? 'none' : '0 4px 12px rgba(11, 122, 100, 0.28)'
         }}
       >
-        СТ
-      </Box>
+        СТ */}
+      {/* </Box> */}
       <Box>
-        <Typography variant="h5" fontWeight={900} color={light ? 'white' : 'text.primary'}>СберТрек</Typography>
+        <Typography variant="h5" fontWeight={900} color={light ? 'white' : 'text.primary'}
+          sx={{
+            fontSize: 62,
+            fontWeight: 900,
+            letterSpacing: '-0.03em',
+            lineHeight: 1,
+            mb: 1}}>
+         Трек
+        </Typography>
         <Typography variant="caption" color={light ? alpha('#fff', 0.76) : 'text.secondary'}>
-          Платформа практических кейсов и траекторий развития
+          Платформа практических кейсов <br /> и траекторий развития
         </Typography>
       </Box>
     </Stack>
