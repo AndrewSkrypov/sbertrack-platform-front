@@ -1,0 +1,33 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      SERVER_PORT: 8080
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx768m -XX:+UseG1GC -XX:+ExitOnOutOfMemoryError"
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+    networks:
+      - sbertrack-platform
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - sbertrack-platform
+
+networks:
+  sbertrack-platform:
+    name: sbertrack-platform

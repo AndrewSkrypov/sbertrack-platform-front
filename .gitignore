@@ -1,0 +1,10 @@
+.gradle/
+build/
+backend/build/
+frontend/dist/
+frontend/node_modules/
+*.iml
+.DS_Store
+.env
+.env.local
+npm-debug.log*

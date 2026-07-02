@@ -1,0 +1,233 @@
+openapi: 3.0.3
+info:
+  title: СберТрек Платформа API
+  version: 0.1.0
+  description: Runtime contract is available from springdoc at /v3/api-docs after backend startup.
+servers:
+  - url: http://localhost:8080/api/v1
+paths:
+  /auth/sign-in:
+    post:
+      tags: [Auth]
+      summary: Вход в демонстрационную версию
+      responses:
+        "200":
+          description: User session with fake token
+  /tracks:
+    get:
+      tags: [Tracks]
+      summary: Каталог треков
+      responses:
+        "200":
+          description: Track list
+    post:
+      tags: [Tracks]
+      summary: Создать трек
+      responses:
+        "200":
+          description: Created track
+  /cases:
+    get:
+      tags: [Cases]
+      summary: Каталог кейсов
+      responses:
+        "200":
+          description: Case list
+    post:
+      tags: [Cases]
+      summary: Создать кейс
+      responses:
+        "200":
+          description: Created case
+  /submissions:
+    get:
+      tags: [Submissions]
+      summary: Список решений
+      responses:
+        "200":
+          description: Submission list
+    post:
+      tags: [Submissions]
+      summary: Создать черновик решения
+      responses:
+        "200":
+          description: Created submission
+  /agents:
+    get:
+      tags: [Agents]
+      summary: Список ИИ-наставников
+      responses:
+        "200":
+          description: AgentDefinition list
+  /agents/sessions:
+    post:
+      tags: [Agents]
+      summary: Создать сессию ИИ-наставника
+      responses:
+        "200":
+          description: AgentSession
+  /agents/sessions/{id}/messages:
+    post:
+      tags: [Agents]
+      summary: Отправить сообщение ИИ-наставнику
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: AgentSession with new messages
+  /trajectories:
+    get:
+      tags: [Trajectories]
+      summary: Список траекторий развития
+      responses:
+        "200":
+          description: Trajectory list
+  /trajectories/{id}:
+    get:
+      tags: [Trajectories]
+      summary: Карточка траектории развития
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Trajectory
+  /trajectories/{id}/nodes:
+    get:
+      tags: [Trajectories]
+      summary: Узлы дерева траектории
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Trajectory nodes
+  /trajectories/{id}/select:
+    post:
+      tags: [Trajectories]
+      summary: Выбрать траекторию
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Student roadmap
+  /roadmaps/me:
+    get:
+      tags: [Roadmaps]
+      summary: Текущая дорожная карта студента
+      responses:
+        "200":
+          description: Student roadmap
+  /roadmaps/{id}/steps/{stepId}/start:
+    post:
+      tags: [Roadmaps]
+      summary: Начать этап дорожной карты
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: stepId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated roadmap
+  /roadmaps/{id}/steps/{stepId}/complete:
+    post:
+      tags: [Roadmaps]
+      summary: Завершить этап дорожной карты
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: stepId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Updated roadmap
+  /analytics/student/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Аналитика главной страницы студента
+      responses:
+        "200":
+          description: Student analytics dashboard
+  /analytics/customer/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Аналитика заказчика
+      responses:
+        "200":
+          description: Customer analytics dashboard
+  /analytics/moderator/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Аналитика модератора
+      responses:
+        "200":
+          description: Moderator analytics dashboard
+  /analytics/admin/dashboard:
+    get:
+      tags: [Analytics]
+      summary: Аналитика администратора
+      responses:
+        "200":
+          description: Admin analytics dashboard
+  /master-prompts:
+    get:
+      tags: [Master prompts]
+      summary: Список мастер-промптов
+      responses:
+        "200":
+          description: MasterPrompt list
+    post:
+      tags: [Master prompts]
+      summary: Создать мастер-промпт
+      responses:
+        "200":
+          description: Created master prompt
+  /cv-book/candidates:
+    get:
+      tags: [CV-book]
+      summary: Кандидаты CV-book с фильтрами
+      responses:
+        "200":
+          description: Candidate list
+  /admin/statistics:
+    get:
+      tags: [Admin]
+      summary: Общая статистика платформы
+      responses:
+        "200":
+          description: Statistics
