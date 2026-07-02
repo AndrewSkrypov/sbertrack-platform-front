@@ -37,6 +37,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { Role } from '../types';
 import { roleLabels } from '../shared/labels';
+import { BrandBackdrop } from './BrandBackdrop';
 
 const drawerWidth = 280;
 
@@ -79,7 +80,7 @@ export function AppShell() {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Toolbar>
         <Stack spacing={0.25}>
-          <Typography variant="h6" color="primary" fontWeight={900}>СберТрек</Typography>
+          <Typography variant="h6" color="primary" fontWeight={900}>Трек</Typography>
           <Typography variant="caption" color="text.secondary" fontWeight={700}>Платформа практических кейсов</Typography>
         </Stack>
       </Toolbar>
@@ -112,6 +113,7 @@ export function AppShell() {
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
+      <BrandBackdrop preset="shell" fixed />
       <AppBar
         position="fixed"
         elevation={0}
@@ -128,7 +130,7 @@ export function AppShell() {
             {isMobile && (
               <IconButton onClick={() => setOpen(true)}><MenuRoundedIcon /></IconButton>
             )}
-            <Typography variant="h6" fontWeight={900}>СберТрек Платформа</Typography>
+            <Typography variant="h6" fontWeight={900}>Трек Платформа</Typography>
           </Stack>
           <Stack direction="row" alignItems="center" spacing={1.5}>
             <Chip size="small" label={session ? roleLabels[session.user.role] : ''} color="primary" variant="outlined" />
@@ -159,7 +161,7 @@ export function AppShell() {
       >
         {drawer}
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: { xs: 2, md: 3 }, width: '100%' }}>
+      <Box component="main" sx={{ position: 'relative', zIndex: 1, flexGrow: 1, p: { xs: 2, md: 3 }, width: '100%' }}>
         <Toolbar />
         <Box sx={{ maxWidth: 1440, mx: 'auto' }}>
           <Outlet />

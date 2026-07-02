@@ -1,17 +1,16 @@
-import { Avatar, Card, CardContent, Stack, Typography, alpha, useTheme } from '@mui/material';
+import { Card, CardContent, Stack, Typography } from '@mui/material';
 import React from 'react';
+import { GradientIcon } from './GradientIcon';
 
 interface StatCardProps {
   title: string;
   value: React.ReactNode;
   icon: React.ReactElement;
-  color?: string;
+  color?: 'brand' | 'blue' | 'amber' | 'violet';
   subtitle?: string;
 }
 
-export function StatCard({ title, value, icon, color, subtitle }: StatCardProps) {
-  const theme = useTheme();
-  const mainColor = color ?? theme.palette.primary.main;
+export function StatCard({ title, value, icon, color = 'brand', subtitle }: StatCardProps) {
   return (
     <Card>
       <CardContent>
@@ -21,7 +20,7 @@ export function StatCard({ title, value, icon, color, subtitle }: StatCardProps)
             <Typography variant="h4" fontWeight={800}>{value}</Typography>
             {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
           </Stack>
-          <Avatar sx={{ bgcolor: alpha(mainColor, 0.12), color: mainColor }}>{icon}</Avatar>
+          <GradientIcon icon={icon} size={48} variant={color} />
         </Stack>
       </CardContent>
     </Card>

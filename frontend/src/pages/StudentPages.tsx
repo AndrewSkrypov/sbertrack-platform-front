@@ -45,6 +45,13 @@ import FactCheckRoundedIcon from '@mui/icons-material/FactCheckRounded';
 import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
 import AccountTreeRoundedIcon from '@mui/icons-material/AccountTreeRounded';
 import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
+import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
+import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
+import SchemaRoundedIcon from '@mui/icons-material/SchemaRounded';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { get, platformApi, post, put } from '../api/client';
@@ -63,6 +70,7 @@ import { EmptyState } from '../components/EmptyState';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
+import { GradientIcon } from '../components/GradientIcon';
 import { useApi } from '../hooks/useApi';
 import {
   AgentDefinition,
@@ -137,31 +145,51 @@ export function StudentDashboardPage() {
         subtitle="Ваш аналитический центр развития: траектория, компетенции, решения и следующий шаг."
       />
 
-      <Card sx={{ mb: 2, overflow: 'hidden' }}>
-        <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
-                <Chip color="primary" label={data.analytics.trajectoryTitle} />
-                <Chip variant="outlined" label={data.analytics.currentLevel} />
-                <Chip color="secondary" variant="outlined" label={data.analytics.goal} />
-              </Stack>
-              <Typography variant="h4">Движение к роли “маяк профессии”</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 760 }}>
-                Ближайший кейс: {nearestCase?.title}. Текущий этап дорожной карты: {currentStep?.title}. Следующий шаг помогает усилить компетенции и добавить новый артефакт в портфолио.
-              </Typography>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <Typography variant="body2" color="text.secondary" fontWeight={800}>Общий прогресс по roadmap</Typography>
-              <Typography variant="h3" sx={{ mt: 1 }}>{data.analytics.roadmapProgress}%</Typography>
-              <LinearProgress variant="determinate" value={data.analytics.roadmapProgress} sx={{ height: 10, borderRadius: 999, mt: 1.5 }} />
-              <Button variant="contained" startIcon={<TimelineRoundedIcon />} sx={{ mt: 2 }} onClick={() => navigate('/student/roadmap')}>
-                Открыть дорожную карту
-              </Button>
-            </Grid>
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -120, top: -120, width: 360, height: 360, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
+        <Grid container spacing={3} alignItems="center" sx={{ position: 'relative' }}>
+          <Grid item xs={12} md={8}>
+            <Stack direction="row" spacing={1} sx={{ mb: 1.5, flexWrap: 'wrap' }}>
+              <Chip label={data.analytics.trajectoryTitle} sx={{ bgcolor: alpha('#fff', 0.18), color: 'white', fontWeight: 700 }} />
+              <Chip label={data.analytics.currentLevel} variant="outlined" sx={{ color: 'white', borderColor: alpha('#fff', 0.4) }} />
+              <Chip label={data.analytics.goal} variant="outlined" sx={{ color: 'white', borderColor: alpha('#fff', 0.4) }} />
+            </Stack>
+            <Typography sx={{ fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>
+              Движение к роли «маяк профессии»
+            </Typography>
+            <Typography sx={{ mt: 1, maxWidth: 760, color: alpha('#fff', 0.85) }}>
+              Ближайший кейс: {nearestCase?.title}. Текущий этап дорожной карты: {currentStep?.title}. Следующий шаг помогает усилить компетенции и добавить новый артефакт в портфолио.
+            </Typography>
           </Grid>
-        </CardContent>
-      </Card>
+          <Grid item xs={12} md={4}>
+            <Typography variant="body2" sx={{ color: alpha('#fff', 0.8), fontWeight: 700 }}>Общий прогресс по roadmap</Typography>
+            <Typography sx={{ fontSize: 56, fontWeight: 800, lineHeight: 1, mt: 0.5 }}>{data.analytics.roadmapProgress}%</Typography>
+            <LinearProgress
+              variant="determinate"
+              value={data.analytics.roadmapProgress}
+              sx={{ height: 8, borderRadius: 999, mt: 1.5, bgcolor: alpha('#fff', 0.22), '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<TimelineRoundedIcon />}
+              sx={{ mt: 2, bgcolor: 'white', color: 'primary.dark', '&:hover': { bgcolor: alpha('#fff', 0.9) } }}
+              onClick={() => navigate('/student/roadmap')}
+            >
+              Открыть дорожную карту
+            </Button>
+          </Grid>
+        </Grid>
+      </Box>
 
       <Box sx={{ mb: 2 }}>
         <MetricGrid metrics={data.analytics.metrics} />
@@ -247,7 +275,7 @@ export function TrackCatalogPage() {
 
   return (
     <Box>
-      <PageHeader title="Каталог треков" subtitle="Фильтры по сложности, аудитории, компетенциям и заказчику" />
+      <PageHeader hero title="Каталог треков" subtitle="Фильтры по сложности, аудитории, компетенциям и заказчику" />
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2}>
@@ -270,22 +298,32 @@ export function TrackCatalogPage() {
       </Card>
       {loading || !data ? <LoadingBlock /> : (
         <Grid container spacing={2}>
-          {data.map((track) => (
+          {data.map((track, index) => {
+            const accent = (['brand', 'blue', 'amber', 'violet'] as const)[index % 4];
+            return (
             <Grid item xs={12} md={6} lg={4} key={track.id}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Stack direction="row" spacing={1} sx={{ mb: 1, flexWrap: 'wrap' }}>
-                    <Chip label={track.customerName} />
-                    <Chip label={difficultyLabels[track.difficulty]} color="primary" variant="outlined" />
+              <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', transition: 'transform .15s, box-shadow .15s', '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 12px 28px rgba(23,33,43,0.1)' } }}>
+                <CardContent sx={{ flexGrow: 1 }}>
+                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+                    <GradientIcon icon={<RouteRoundedIcon />} variant={accent} />
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="caption" color="text.secondary" fontWeight={700} noWrap>{track.customerName}</Typography>
+                      <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{track.title}</Typography>
+                    </Box>
                   </Stack>
-                  <Typography variant="h6">{track.title}</Typography>
-                  <Typography color="text.secondary" sx={{ mt: 1 }}>{track.description}</Typography>
-                  <Typography variant="body2" sx={{ mt: 2 }}><b>{track.caseIds.length}</b> кейсов</Typography>
+                  <Typography color="text.secondary" variant="body2">{track.description}</Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
+                    <Chip size="small" label={difficultyLabels[track.difficulty]} sx={{ bgcolor: 'primary.light', color: 'primary.dark', fontWeight: 700 }} />
+                    <Chip size="small" variant="outlined" label={`${track.caseIds.length} кейсов`} />
+                  </Stack>
                 </CardContent>
-                <CardActions><Button onClick={() => navigate(`/student/tracks/${track.id}`)}>Открыть</Button></CardActions>
+                <CardActions sx={{ px: 2, pb: 2 }}>
+                  <Button variant="outlined" endIcon={<ArrowForwardRoundedIcon />} onClick={() => navigate(`/student/tracks/${track.id}`)}>Открыть</Button>
+                </CardActions>
               </Card>
             </Grid>
-          ))}
+            );
+          })}
         </Grid>
       )}
     </Box>
@@ -519,9 +557,10 @@ export function StudentTrajectoryTreePage() {
   return (
     <Box>
       <PageHeader
+        hero
         title="Дерево траекторий"
         subtitle="Выбери, к какому маяку профессии ты хочешь двигаться."
-        actions={<Button variant="contained" startIcon={<TimelineRoundedIcon />} onClick={() => selectTrajectory(activeTrajectory)}>Выбрать траекторию</Button>}
+        actions={<Button variant="contained" startIcon={<TimelineRoundedIcon />} onClick={() => selectTrajectory(activeTrajectory)} sx={{ bgcolor: 'white', color: 'primary.dark', '&:hover': { bgcolor: alpha('#fff', 0.9) } }}>Выбрать траекторию</Button>}
       />
       <Grid container spacing={2}>
         <Grid item xs={12} lg={8}>
@@ -843,48 +882,77 @@ export function StudentRoadmapPage() {
 
   if (loading || !data) return <LoadingBlock />;
   const casesById = new Map(data.cases.map((item) => [item.id, item]));
+  const steps = data.roadmap.steps;
+  const completed = steps.filter((s) => s.status === 'COMPLETED').length;
 
   return (
     <Box>
       <PageHeader title="Мой roadmap" subtitle={data.roadmap.title} />
-      <Card sx={{ mb: 2 }}>
-        <CardContent>
-          <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2}>
-            <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="body2" color="text.secondary" fontWeight={900}>Прогресс дорожной карты</Typography>
-              <Typography variant="h4" sx={{ mt: 0.5 }}>{data.roadmap.progressPercent}%</Typography>
-              <LinearProgress variant="determinate" value={data.roadmap.progressPercent} sx={{ height: 10, borderRadius: 999, mt: 1 }} />
-            </Box>
+
+      {/* Акцентный hero прогресса — фирменный зелёный, а не серая карточка. */}
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 60%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -80, top: -80, width: 320, height: 320, borderRadius: '50%', background: alpha('#fff', 0.08) }} />
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={3} alignItems={{ md: 'flex-end' }} justifyContent="space-between" sx={{ position: 'relative' }}>
+          <Box sx={{ maxWidth: 560 }}>
+            <Typography variant="overline" sx={{ color: alpha('#fff', 0.75), fontWeight: 700, letterSpacing: '0.08em' }}>
+              Прогресс дорожной карты
+            </Typography>
+            <Stack direction="row" alignItems="baseline" spacing={1.5}>
+              <Typography sx={{ fontSize: { xs: 52, md: 68 }, fontWeight: 800, lineHeight: 1 }}>{data.roadmap.progressPercent}%</Typography>
+              <Typography sx={{ color: alpha('#fff', 0.82) }}>{completed} из {steps.length} этапов пройдено</Typography>
+            </Stack>
+            <LinearProgress
+              variant="determinate"
+              value={data.roadmap.progressPercent}
+              sx={{
+                height: 8,
+                borderRadius: 999,
+                mt: 2.5,
+                bgcolor: alpha('#fff', 0.22),
+                '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 }
+              }}
+            />
+          </Box>
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ bgcolor: alpha('#fff', 0.14), borderRadius: 2, px: 2, py: 1.25 }}>
+            <FlagRoundedIcon />
             <Box>
-              <Typography variant="body2" color="text.secondary">Ожидаемое завершение</Typography>
-              <Typography fontWeight={900}>{new Date(data.roadmap.expectedFinishDate).toLocaleDateString('ru-RU')}</Typography>
+              <Typography variant="caption" sx={{ color: alpha('#fff', 0.8) }}>Ожидаемое завершение</Typography>
+              <Typography fontWeight={800}>{new Date(data.roadmap.expectedFinishDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</Typography>
             </Box>
           </Stack>
-        </CardContent>
-      </Card>
+        </Stack>
+      </Box>
 
-      <Card>
-        <CardContent>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(7, minmax(140px, 1fr))' }, gap: 2 }}>
-            {data.roadmap.steps.map((step, index) => {
-              const linkedCase = step.caseId ? casesById.get(step.caseId) : undefined;
-              const isFinal = index === data.roadmap.steps.length - 1;
-              return (
-                <Box key={step.id} sx={{ mt: { xs: 0, md: index % 2 ? 8 : 0 }, position: 'relative' }}>
-                  <RoadmapStepCard
-                    step={step}
-                    title={isFinal ? 'Маяк профессии' : step.title}
-                    linkedCase={linkedCase}
-                    onOpenCase={() => linkedCase && navigate(`/student/cases/${linkedCase.id}`)}
-                    onStart={() => startStep(data.roadmap, step.id)}
-                    onComplete={() => completeStep(data.roadmap, step.id)}
-                  />
-                </Box>
-              );
-            })}
-          </Box>
-        </CardContent>
-      </Card>
+      {/* Вертикальный timeline: непрерывная линия с узлами слева, карточки справа. */}
+      <Stack spacing={0}>
+        {steps.map((step, index) => {
+          const linkedCase = step.caseId ? casesById.get(step.caseId) : undefined;
+          const isFinal = index === steps.length - 1;
+          return (
+            <RoadmapTimelineRow
+              key={step.id}
+              step={step}
+              index={index}
+              isFinal={isFinal}
+              title={isFinal ? 'Маяк профессии' : step.title}
+              linkedCase={linkedCase}
+              onOpenCase={() => linkedCase && navigate(`/student/cases/${linkedCase.id}`)}
+              onStart={() => startStep(data.roadmap, step.id)}
+              onComplete={() => completeStep(data.roadmap, step.id)}
+            />
+          );
+        })}
+      </Stack>
     </Box>
   );
 }
@@ -926,7 +994,30 @@ export function AgentSandboxPage() {
   if (loading || !data || !agent || !selectedCase) return <LoadingBlock />;
   return (
     <Box>
-      <PageHeader title="Песочница ИИ-наставников" subtitle="Наставники помогают думать, проверять гипотезы и структурировать работу." />
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -110, top: -110, width: 320, height: 320, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
+        <Stack direction="row" spacing={2.5} alignItems="center" sx={{ position: 'relative' }}>
+          <Box sx={{ width: 60, height: 60, borderRadius: 2, display: 'grid', placeItems: 'center', bgcolor: alpha('#fff', 0.18), border: `1px solid ${alpha('#fff', 0.28)}`, flexShrink: 0 }}>
+            <SmartToyRoundedIcon sx={{ fontSize: 30 }} />
+          </Box>
+          <Box>
+            <Typography sx={{ fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>Песочница ИИ-наставников</Typography>
+            <Typography sx={{ mt: 0.75, color: alpha('#fff', 0.85), maxWidth: 640 }}>
+              Наставники помогают думать, проверять гипотезы и структурировать работу — но не решают за вас.
+            </Typography>
+          </Box>
+        </Stack>
+      </Box>
       <Tabs value={selected} onChange={(_, value) => { setSelected(value); setAgentSession(null); }} variant="scrollable" sx={{ mb: 2 }}>
         {data.agents.map((item) => <Tab key={item.id} label={item.name} />)}
       </Tabs>
@@ -934,11 +1025,16 @@ export function AgentSandboxPage() {
         <Grid item xs={12} md={4}>
           <Card>
             <CardContent>
-              <Typography variant="h6">{agent.name}</Typography>
-              <Typography color="text.secondary" sx={{ mt: 1 }}>{agent.description}</Typography>
-              <Typography variant="body2" sx={{ mt: 2 }}><b>Специализация:</b> {agentSpecializationLabels[agent.specialization]}</Typography>
+              <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+                <GradientIcon icon={<SmartToyRoundedIcon />} variant="brand" />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{agent.name}</Typography>
+                  <Typography variant="caption" color="text.secondary" fontWeight={700}>{agentSpecializationLabels[agent.specialization]}</Typography>
+                </Box>
+              </Stack>
+              <Typography color="text.secondary" variant="body2">{agent.description}</Typography>
               <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
-                {agent.capabilities.map((capability) => <Chip size="small" key={capability} label={agentCapabilityLabels[capability] ?? capability} />)}
+                {agent.capabilities.map((capability) => <Chip size="small" key={capability} label={agentCapabilityLabels[capability] ?? capability} sx={{ bgcolor: 'primary.light', color: 'primary.dark', fontWeight: 600 }} />)}
               </Stack>
               <Divider sx={{ my: 2 }} />
               <TextField select label="Кейс" value={selectedCase.id} onChange={(event) => { setCaseId(event.target.value); setAgentSession(null); }} fullWidth sx={{ mb: 2 }}>
@@ -981,6 +1077,7 @@ export function AgentSandboxPage() {
 }
 
 export function PortfolioPage() {
+  const { session } = useAuth();
   const { data, loading } = useApi(async () => {
     const [portfolio, submissions, cases] = await Promise.all([
       get<Portfolio>('/portfolio/me'),
@@ -991,6 +1088,7 @@ export function PortfolioPage() {
   }, []);
   if (loading || !data) return <LoadingBlock />;
   const radar = competencyKeys.map((competency) => ({ competency, value: data.portfolio.competencyProfile[competency] ?? 0 }));
+  const topCompetency = [...radar].sort((a, b) => b.value - a.value)[0];
   const artifacts = data.portfolio.artifacts.map((artifact, index) => ({
     artifact,
     caseTitle: data.portfolio.completedCases[index % Math.max(data.portfolio.completedCases.length, 1)] ?? 'Кейс в работе',
@@ -1001,11 +1099,45 @@ export function PortfolioPage() {
 
   return (
     <Box>
-      <PageHeader title="Моё портфолио" subtitle={data.portfolio.summary} />
+      {/* Акцентный hero-профиль вместо серого заголовка. */}
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -110, top: -110, width: 320, height: 320, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
+        <Stack direction="row" spacing={2.5} alignItems="center" sx={{ position: 'relative' }}>
+          <Box sx={{ width: 72, height: 72, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: alpha('#fff', 0.18), border: `2px solid ${alpha('#fff', 0.3)}`, fontSize: 28, fontWeight: 800, flexShrink: 0 }}>
+            {session?.user.fullName?.[0] ?? 'С'}
+          </Box>
+          <Box>
+            <Typography variant="overline" sx={{ color: alpha('#fff', 0.75), fontWeight: 700, letterSpacing: '0.08em' }}>Моё портфолио</Typography>
+            <Typography sx={{ fontSize: { xs: 24, md: 30 }, fontWeight: 800, lineHeight: 1.1 }}>{session?.user.fullName ?? 'Участник'}</Typography>
+            <Typography sx={{ mt: 0.75, color: alpha('#fff', 0.85), maxWidth: 640 }}>{data.portfolio.summary}</Typography>
+            <Stack direction="row" spacing={1} sx={{ mt: 1.5, flexWrap: 'wrap' }}>
+              <Chip size="small" label={`${data.portfolio.completedCases.length} завершённых кейсов`} sx={{ bgcolor: alpha('#fff', 0.16), color: 'white', fontWeight: 700 }} />
+              <Chip size="small" label={`${data.portfolio.artifacts.length} артефактов`} sx={{ bgcolor: alpha('#fff', 0.16), color: 'white', fontWeight: 700 }} />
+              {topCompetency && <Chip size="small" label={`Сильная сторона: ${competencyLabels[topCompetency.competency]}`} sx={{ bgcolor: alpha('#fff', 0.16), color: 'white', fontWeight: 700 }} />}
+            </Stack>
+          </Box>
+        </Stack>
+      </Box>
+
       <Grid container spacing={2} sx={{ mb: 2 }}>
         {['Портфолио развивается', 'Готово к демонстрации', 'Есть рекомендации от заказчика', 'Есть завершённые кейсы'].map((label, index) => (
           <Grid item xs={12} sm={6} md={3} key={label}>
-            <StatCard title={label} value={index === 3 ? data.portfolio.completedCases.length : 'Да'} icon={<WorkspacePremiumRoundedIcon />} />
+            <StatCard
+              title={label}
+              value={index === 3 ? data.portfolio.completedCases.length : 'Да'}
+              icon={<WorkspacePremiumRoundedIcon />}
+              color={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]}
+            />
           </Grid>
         ))}
       </Grid>
@@ -1024,22 +1156,35 @@ export function PortfolioPage() {
         <Grid item xs={12} lg={7}>
           <Card>
             <CardContent>
-              <Typography variant="h6" sx={{ mb: 1 }}>Артефакты</Typography>
-              <Stack spacing={1}>
-                {artifacts.map((item) => (
-                  <Paper key={item.artifact} variant="outlined" sx={{ p: 1.5 }}>
-                    <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={1}>
-                      <Box>
-                        <Typography fontWeight={900}>{item.artifact}</Typography>
-                        <Typography variant="body2" color="text.secondary">{item.caseTitle} · {item.type} · {item.date}</Typography>
-                      </Box>
-                      <Stack direction="row" spacing={1}>
-                        <Chip label={item.status} color="primary" variant="outlined" />
-                        <Button size="small">Открыть</Button>
+              <Typography variant="h6" sx={{ mb: 2 }}>Артефакты</Typography>
+              <Stack spacing={1.5}>
+                {artifacts.map((item, index) => {
+                  const isDoc = item.type === 'Документ';
+                  const ready = item.status === 'Готово к демонстрации';
+                  return (
+                    <Paper
+                      key={item.artifact}
+                      variant="outlined"
+                      sx={{ p: 2, transition: 'border-color .15s, box-shadow .15s', '&:hover': { borderColor: alpha('#0b7a64', 0.4), boxShadow: '0 6px 18px rgba(23,33,43,0.06)' } }}
+                    >
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <GradientIcon icon={isDoc ? <DescriptionRoundedIcon /> : <SchemaRoundedIcon />} variant={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]} />
+                        <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                          <Typography fontWeight={700} noWrap>{item.artifact}</Typography>
+                          <Typography variant="body2" color="text.secondary" noWrap>{item.caseTitle} · {item.type} · {item.date}</Typography>
+                        </Box>
+                        <Chip
+                          size="small"
+                          label={item.status}
+                          sx={ready
+                            ? { bgcolor: alpha('#16803c', 0.12), color: '#16803c', fontWeight: 700 }
+                            : { bgcolor: alpha('#b45309', 0.12), color: '#b45309', fontWeight: 700 }}
+                        />
+                        <Button size="small" endIcon={<ArrowForwardRoundedIcon />}>Открыть</Button>
                       </Stack>
-                    </Stack>
-                  </Paper>
-                ))}
+                    </Paper>
+                  );
+                })}
               </Stack>
             </CardContent>
           </Card>
@@ -1070,21 +1215,25 @@ export function PortfolioPage() {
   );
 }
 
+const reflectionQuestions: { key: string; hint: string }[] = [
+  { key: 'Что получилось?', hint: 'Конкретный результат: что заработало, какую задачу закрыли, что стало понятнее.' },
+  { key: 'Что было сложно?', hint: 'Где застряли, что заняло больше всего времени, какие места пришлось переделывать.' },
+  { key: 'Как использовался ИИ?', hint: 'В чём именно помог наставник — идеи, проверка гипотез, рутина. Где не помог.' },
+  { key: 'Что сделал сам?', hint: 'Ваш собственный вклад: решения, которые приняли и обосновали лично.' },
+  { key: 'Что улучшить в следующей итерации?', hint: 'Один-два вывода, которые заберёте в следующий кейс.' }
+];
+
 export function ReflectionPage() {
   const { submissionId } = useParams();
   const { session } = useAuth();
-  const [answers, setAnswers] = useState<Record<string, string>>({
-    'Что получилось?': '',
-    'Что было сложно?': '',
-    'Как использовался ИИ?': '',
-    'Что сделал сам?': '',
-    'Что улучшить в следующей итерации?': ''
-  });
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    Object.fromEntries(reflectionQuestions.map((q) => [q.key, '']))
+  );
   const [summary, setSummary] = useState('');
   const [saved, setSaved] = useState(false);
   const { data: submissions } = useApi(() => get<Submission[]>('/submissions', { studentId: session?.user.id }), [session?.user.id]);
   const effectiveSubmissionId = submissionId ?? submissions?.[0]?.id;
-  const questions = useMemo(() => Object.keys(answers), [answers]);
+  const filledCount = reflectionQuestions.filter((q) => answers[q.key].trim()).length;
 
   async function submitReflection() {
     if (!effectiveSubmissionId) return;
@@ -1092,22 +1241,110 @@ export function ReflectionPage() {
     setSaved(true);
   }
 
+  const progress = Math.round((filledCount / reflectionQuestions.length) * 100);
+
   return (
     <Box>
-      <PageHeader title="Рефлексия" subtitle="Итоговая фиксация собственного вклада, работы с ИИ и следующей итерации." />
-      <Card>
-        <CardContent>
+      {/* Акцентный hero с живым прогрессом заполнения. */}
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -110, top: -110, width: 320, height: 320, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ md: 'flex-end' }} spacing={2} sx={{ position: 'relative' }}>
+          <Box sx={{ maxWidth: 620 }}>
+            <Typography variant="overline" sx={{ color: alpha('#fff', 0.75), fontWeight: 700, letterSpacing: '0.08em' }}>Рефлексия по кейсу</Typography>
+            <Typography sx={{ fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>Что вы забираете из работы</Typography>
+            <Typography sx={{ mt: 1, color: alpha('#fff', 0.85) }}>
+              Итоговая фиксация собственного вклада, работы с ИИ и следующей итерации.
+            </Typography>
+          </Box>
+          <Box sx={{ minWidth: 200 }}>
+            <Typography variant="body2" sx={{ color: alpha('#fff', 0.8), fontWeight: 700 }}>Заполнено</Typography>
+            <Typography sx={{ fontSize: 48, fontWeight: 800, lineHeight: 1 }}>{progress}%</Typography>
+            <LinearProgress
+              variant="determinate"
+              value={progress}
+              sx={{ height: 6, borderRadius: 999, mt: 1, bgcolor: alpha('#fff', 0.22), '& .MuiLinearProgress-bar': { bgcolor: '#fff', borderRadius: 999 } }}
+            />
+          </Box>
+        </Stack>
+      </Box>
+
+      {saved && <Alert severity="success" sx={{ mb: 2 }}>Рефлексия сохранена</Alert>}
+      {!effectiveSubmissionId && <Alert severity="info" sx={{ mb: 2 }}>Сначала отправьте решение, чтобы связать рефлексию с кейсом.</Alert>}
+
+      <Grid container spacing={2.5}>
+        <Grid item xs={12} lg={8}>
           <Stack spacing={2}>
-            {saved && <Alert severity="success">Рефлексия сохранена</Alert>}
-            {!effectiveSubmissionId && <Alert severity="info">Сначала отправьте решение, чтобы связать рефлексию с кейсом.</Alert>}
-            {questions.map((question) => (
-              <TextField key={question} label={question} value={answers[question]} onChange={(event) => setAnswers({ ...answers, [question]: event.target.value })} multiline minRows={2} fullWidth />
-            ))}
-            <TextField label="Краткий итог" value={summary} onChange={(event) => setSummary(event.target.value)} multiline minRows={3} fullWidth />
-            <Button variant="contained" onClick={submitReflection} disabled={!effectiveSubmissionId}>Сохранить рефлексию</Button>
+            {reflectionQuestions.map((q, index) => {
+              const accent = (['brand', 'blue', 'amber', 'violet', 'brand'] as const)[index % 5];
+              const filled = answers[q.key].trim().length > 0;
+              return (
+                <Card key={q.key} variant="outlined" sx={{ borderColor: filled ? alpha('#0b7a64', 0.4) : 'divider', transition: 'border-color .15s' }}>
+                  <CardContent>
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <GradientIcon icon={<Box component="span" sx={{ fontWeight: 800, fontSize: 16 }}>{index + 1}</Box>} variant={accent} />
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography fontWeight={700}>{q.key}</Typography>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>{q.hint}</Typography>
+                        <TextField
+                          value={answers[q.key]}
+                          onChange={(event) => setAnswers({ ...answers, [q.key]: event.target.value })}
+                          multiline
+                          minRows={2}
+                          fullWidth
+                          placeholder="Ваш ответ…"
+                        />
+                      </Box>
+                    </Stack>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </Stack>
-        </CardContent>
-      </Card>
+        </Grid>
+
+        <Grid item xs={12} lg={4}>
+          <Stack spacing={2.5} sx={{ position: { lg: 'sticky' }, top: { lg: 88 } }}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography fontWeight={700} sx={{ mb: 0.5 }}>Краткий итог</Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                  Одно-два предложения — суть того, что вы забираете из кейса.
+                </Typography>
+                <TextField value={summary} onChange={(event) => setSummary(event.target.value)} multiline minRows={4} fullWidth placeholder="Главный вывод…" />
+              </CardContent>
+            </Card>
+
+            <Card variant="outlined">
+              <CardContent>
+                <Stack spacing={1.5}>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="body2" color="text.secondary">Заполнено вопросов</Typography>
+                    <Typography fontWeight={700}>{filledCount} / {reflectionQuestions.length}</Typography>
+                  </Stack>
+                  <LinearProgress
+                    variant="determinate"
+                    value={(filledCount / reflectionQuestions.length) * 100}
+                    sx={{ height: 6, borderRadius: 3 }}
+                  />
+                  <Button variant="contained" size="large" onClick={submitReflection} disabled={!effectiveSubmissionId}>
+                    Сохранить рефлексию
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
+        </Grid>
+      </Grid>
     </Box>
   );
 }
@@ -1152,32 +1389,67 @@ function MentorChatPanel({
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>
-        <Typography variant="h6" sx={{ mb: 2 }}>{title}</Typography>
-        <Paper variant="outlined" sx={{ p: 1.5, mb: 2, bgcolor: 'primary.light' }}>
-          <Typography variant="caption" fontWeight={900}>Контекст наставника</Typography>
-          <Typography variant="body2"><b>Кейс:</b> {caseTitle}</Typography>
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+          <GradientIcon icon={<SmartToyRoundedIcon />} variant="brand" size={40} />
+          <Typography variant="h6">{title}</Typography>
+        </Stack>
+        <Paper
+          variant="outlined"
+          sx={{ p: 1.5, mb: 2, position: 'relative', overflow: 'hidden', borderColor: alpha('#0b7a64', 0.3), bgcolor: alpha('#0b7a64', 0.05) }}
+        >
+          <Typography variant="caption" fontWeight={800} color="primary.dark">КОНТЕКСТ НАСТАВНИКА</Typography>
+          <Typography variant="body2" sx={{ mt: 0.5 }}><b>Кейс:</b> {caseTitle}</Typography>
           <Typography variant="body2"><b>Наработки:</b> {artifacts.length ? artifacts.join(', ') : 'Не выбраны'}</Typography>
         </Paper>
-        <Stack spacing={1.5} sx={{ minHeight: 360, maxHeight: 500, overflow: 'auto', mb: 2 }}>
-          {(session?.messages ?? []).map((item) => (
-            <Paper key={item.id} variant="outlined" sx={{ p: 1.5, bgcolor: item.role === 'AGENT' ? 'primary.light' : 'background.paper' }}>
-              <Typography variant="caption" fontWeight={900}>{item.role === 'AGENT' ? 'Наставник' : 'Вы'}</Typography>
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{item.content}</Typography>
-            </Paper>
-          ))}
+        <Stack spacing={1.5} sx={{ minHeight: 360, maxHeight: 500, overflow: 'auto', mb: 2, px: 0.5 }}>
+          {(session?.messages ?? []).map((item) => {
+            const isAgent = item.role === 'AGENT';
+            return (
+              <Stack
+                key={item.id}
+                direction="row"
+                spacing={1.25}
+                alignItems="flex-start"
+                sx={{ flexDirection: isAgent ? 'row' : 'row-reverse', alignSelf: isAgent ? 'flex-start' : 'flex-end', maxWidth: '88%' }}
+              >
+                {isAgent ? (
+                  <GradientIcon icon={<SmartToyRoundedIcon sx={{ fontSize: 18 }} />} variant="brand" size={32} round />
+                ) : (
+                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, display: 'grid', placeItems: 'center', bgcolor: 'secondary.main', color: 'white', fontWeight: 800, fontSize: 13 }}>Вы</Box>
+                )}
+                <Box
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    borderTopLeftRadius: isAgent ? 4 : 16,
+                    borderTopRightRadius: isAgent ? 16 : 4,
+                    bgcolor: isAgent ? alpha('#0b7a64', 0.08) : 'secondary.main',
+                    color: isAgent ? 'text.primary' : 'white'
+                  }}
+                >
+                  <Typography variant="caption" fontWeight={800} sx={{ display: 'block', mb: 0.25, color: isAgent ? 'primary.dark' : alpha('#fff', 0.85) }}>
+                    {isAgent ? 'Наставник' : 'Вы'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{item.content}</Typography>
+                </Box>
+              </Stack>
+            );
+          })}
           {!session && <EmptyState title="Чат готов" description="Задайте вопрос по цели, структуре решения или проверке гипотез." />}
         </Stack>
         <Stack direction="row" spacing={1}>
           <TextField value={message} onChange={(event) => onMessage(event.target.value)} placeholder="Помоги проверить структуру решения" fullWidth />
-          <Button variant="contained" onClick={onSend}><SendRoundedIcon /></Button>
+          <Button variant="contained" onClick={onSend} sx={{ px: 2.5 }}><SendRoundedIcon /></Button>
         </Stack>
       </CardContent>
     </Card>
   );
 }
 
-function RoadmapStepCard({
+function RoadmapTimelineRow({
   step,
+  index,
+  isFinal,
   title,
   linkedCase,
   onOpenCase,
@@ -1185,28 +1457,115 @@ function RoadmapStepCard({
   onComplete
 }: {
   step: { status: RoadmapStatus; title: string; description: string; caseId?: string | null };
+  index: number;
+  isFinal: boolean;
   title: string;
   linkedCase?: PracticalCase;
   onOpenCase: () => void;
   onStart: () => void;
   onComplete: () => void;
 }) {
+  const color = nodeColor(step.status);
+  const done = step.status === 'COMPLETED';
+  const locked = step.status === 'LOCKED';
+  const active = step.status === 'IN_PROGRESS' || step.status === 'AVAILABLE';
+
+  const NodeIcon = isFinal
+    ? WorkspacePremiumRoundedIcon
+    : done
+      ? CheckRoundedIcon
+      : locked
+        ? LockRoundedIcon
+        : step.status === 'IN_PROGRESS'
+          ? PlayArrowRoundedIcon
+          : TimelineRoundedIcon;
+
   return (
-    <Paper variant="outlined" sx={{ p: 2, minHeight: 230, borderRadius: 2 }}>
-      <Stack spacing={1.25}>
-        <Box sx={{ width: 42, height: 42, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: nodeColor(step.status), color: 'white', fontWeight: 900 }}>
-          <TimelineRoundedIcon fontSize="small" />
+    <Stack direction="row" spacing={{ xs: 2, md: 3 }} sx={{ opacity: locked ? 0.62 : 1 }}>
+      {/* Колонка с узлом и соединительной линией */}
+      <Stack alignItems="center" sx={{ pt: 0.5 }}>
+        <Box
+          sx={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            display: 'grid',
+            placeItems: 'center',
+            flexShrink: 0,
+            color: 'white',
+            bgcolor: color,
+            boxShadow: active ? `0 0 0 6px ${alpha(color, 0.16)}` : 'none',
+            transition: 'box-shadow .2s'
+          }}
+        >
+          <NodeIcon fontSize="small" />
         </Box>
-        <Chip size="small" label={roadmapStatusLabels[step.status]} />
-        <Typography fontWeight={900}>{title}</Typography>
-        <Typography variant="body2" color="text.secondary">{step.description}</Typography>
-        {linkedCase && <Typography variant="body2"><b>Кейс:</b> {linkedCase.title}</Typography>}
-        {linkedCase && <CompetencyBars values={linkedCase.competencyWeights} compact />}
-        {step.status === 'AVAILABLE' && linkedCase && <Button size="small" variant="contained" onClick={onOpenCase}>Перейти к кейсу</Button>}
-        {step.status === 'AVAILABLE' && !linkedCase && <Button size="small" variant="contained" onClick={onStart}>Начать этап</Button>}
-        {step.status === 'IN_PROGRESS' && <Button size="small" variant="outlined" onClick={onComplete}>Завершить этап</Button>}
+        {!isFinal && (
+          <Box
+            sx={{
+              flexGrow: 1,
+              width: 2,
+              minHeight: 32,
+              my: 1,
+              borderRadius: 1,
+              bgcolor: done ? nodeColor('COMPLETED') : 'divider'
+            }}
+          />
+        )}
       </Stack>
-    </Paper>
+
+      {/* Карточка этапа */}
+      <Card
+        variant="outlined"
+        sx={{
+          flexGrow: 1,
+          mb: 3,
+          borderColor: active ? alpha(color, 0.4) : 'divider',
+          transition: 'border-color .2s, box-shadow .2s',
+          '&:hover': { boxShadow: '0 8px 24px rgba(23,33,43,0.06)' }
+        }}
+      >
+        <CardContent>
+          <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5} sx={{ mb: 1 }}>
+            <Box>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>
+                Этап {String(index + 1).padStart(2, '0')}
+              </Typography>
+              <Typography variant="h6" sx={{ lineHeight: 1.25 }}>{title}</Typography>
+            </Box>
+            <Chip
+              size="small"
+              label={roadmapStatusLabels[step.status]}
+              sx={{ bgcolor: alpha(color, 0.12), color, fontWeight: 700 }}
+            />
+          </Stack>
+
+          <Typography variant="body2" color="text.secondary">{step.description}</Typography>
+
+          {linkedCase && (
+            <Box sx={{ mt: 2, p: 1.5, borderRadius: 2, bgcolor: 'background.default' }}>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>Связанный кейс</Typography>
+              <Typography variant="body2" fontWeight={700} sx={{ mb: 1 }}>{linkedCase.title}</Typography>
+              <CompetencyBars values={linkedCase.competencyWeights} compact />
+            </Box>
+          )}
+
+          {(active) && (
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              {step.status === 'AVAILABLE' && linkedCase && (
+                <Button size="small" variant="contained" endIcon={<ArrowForwardRoundedIcon />} onClick={onOpenCase}>Перейти к кейсу</Button>
+              )}
+              {step.status === 'AVAILABLE' && !linkedCase && (
+                <Button size="small" variant="contained" onClick={onStart}>Начать этап</Button>
+              )}
+              {step.status === 'IN_PROGRESS' && (
+                <Button size="small" variant="outlined" onClick={onComplete}>Завершить этап</Button>
+              )}
+            </Stack>
+          )}
+        </CardContent>
+      </Card>
+    </Stack>
   );
 }
 

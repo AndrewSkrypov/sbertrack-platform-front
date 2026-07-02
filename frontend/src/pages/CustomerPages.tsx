@@ -15,7 +15,8 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Typography
+  Typography,
+  alpha
 } from '@mui/material';
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import FactCheckRoundedIcon from '@mui/icons-material/FactCheckRounded';
@@ -85,16 +86,31 @@ export function CustomerDashboardPage() {
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
-      <PageHeader
-        title="Панель заказчика"
-        subtitle="Треки, кейсы, решения, аудитория траекторий и витрина кандидатов."
-        actions={
+      <Box
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 3,
+          p: { xs: 3, md: 4 },
+          mb: 3,
+          color: 'white',
+          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+        }}
+      >
+        <Box aria-hidden sx={{ position: 'absolute', right: -120, top: -120, width: 360, height: 360, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
+        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ md: 'flex-end' }} spacing={2} sx={{ position: 'relative' }}>
+          <Box sx={{ maxWidth: 620 }}>
+            <Typography sx={{ fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>Панель заказчика</Typography>
+            <Typography sx={{ mt: 1, color: alpha('#fff', 0.85) }}>
+              Треки, кейсы, решения, аудитория траекторий и витрина кандидатов.
+            </Typography>
+          </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-            <Button variant="outlined" startIcon={<AddCircleRoundedIcon />} onClick={() => navigate('/customer/tracks/create')}>Создать трек</Button>
-            <Button variant="contained" startIcon={<WorkRoundedIcon />} onClick={() => navigate('/customer/cases/create')}>Создать кейс</Button>
+            <Button variant="outlined" startIcon={<AddCircleRoundedIcon />} onClick={() => navigate('/customer/tracks/create')} sx={{ color: 'white', borderColor: alpha('#fff', 0.5) }}>Создать трек</Button>
+            <Button variant="contained" startIcon={<WorkRoundedIcon />} onClick={() => navigate('/customer/cases/create')} sx={{ bgcolor: 'white', color: 'primary.dark', '&:hover': { bgcolor: alpha('#fff', 0.9) } }}>Создать кейс</Button>
           </Stack>
-        }
-      />
+        </Stack>
+      </Box>
       <Box sx={{ mb: 2 }}>
         <MetricGrid metrics={data.analytics.metrics} />
       </Box>
@@ -180,7 +196,7 @@ export function TrackCreatePage() {
   }
 
   return (
-    <FormCard title="Создать трек" onSubmit={submit} submitLabel="Создать трек">
+    <FormCard title="Создать трек" subtitle="Трек объединяет кейсы в маршрут развития к маяку профессии." onSubmit={submit} submitLabel="Создать трек">
       <TextField label="Название" value={title} onChange={(event) => setTitle(event.target.value)} fullWidth required />
       <TextField label="Описание" value={description} onChange={(event) => setDescription(event.target.value)} multiline minRows={4} fullWidth required />
       <TextField select label="Сложность" value={difficulty} onChange={(event) => setDifficulty(event.target.value as Difficulty)} fullWidth>
@@ -230,7 +246,7 @@ export function CaseCreatePage() {
 
   if (loading || !tracks) return <LoadingBlock />;
   return (
-    <FormCard title="Создать кейс" onSubmit={submit} submitLabel="Создать кейс">
+    <FormCard title="Создать кейс" subtitle="Практическая задача с артефактами и вкладом в компетенции участника." onSubmit={submit} submitLabel="Создать кейс">
       <TextField select label="Трек" value={trackId || tracks[0]?.id || ''} onChange={(event) => setTrackId(event.target.value)} fullWidth>
         {tracks.map((track) => <MenuItem key={track.id} value={track.id}>{track.title}</MenuItem>)}
       </TextField>
@@ -298,7 +314,7 @@ export function SubmissionReviewPage() {
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
-      <PageHeader title="Проверка решений" subtitle="Список решений, карточка работы и форма обратной связи." />
+      <PageHeader hero title="Проверка решений" subtitle="Список решений, карточка работы и форма обратной связи." />
       <Grid container spacing={2}>
         <Grid item xs={12} lg={5}>
           <Card><CardContent><SubmissionTable submissions={data.submissions} selectedId={selected?.id} onOpen={(id) => setSelectedId(id)} /></CardContent></Card>
@@ -355,7 +371,7 @@ export function CvBookPage() {
 
   return (
     <Box>
-      <PageHeader title="Витрина кандидатов" subtitle="Фильтрация по компетенциям, приоритету, кейсам, организации и баллу." />
+      <PageHeader hero title="Витрина кандидатов" subtitle="Фильтрация по компетенциям, приоритету, кейсам, организации и баллу." />
       <Card sx={{ mb: 2 }}>
         <CardContent>
           <Grid container spacing={2}>
@@ -506,15 +522,15 @@ function SubmissionTable({ submissions, selectedId, onOpen }: { submissions: Sub
   );
 }
 
-function FormCard({ title, children, submitLabel, onSubmit }: { title: string; children: React.ReactNode; submitLabel: string; onSubmit: (event: FormEvent) => void }) {
+function FormCard({ title, subtitle, children, submitLabel, onSubmit }: { title: string; subtitle?: string; children: React.ReactNode; submitLabel: string; onSubmit: (event: FormEvent) => void }) {
   return (
     <Box>
-      <PageHeader title={title} />
-      <Card>
+      <PageHeader hero title={title} subtitle={subtitle} />
+      <Card sx={{ maxWidth: 720 }}>
         <CardContent>
           <Stack component="form" spacing={2} onSubmit={onSubmit}>
             {children}
-            <Button type="submit" variant="contained">{submitLabel}</Button>
+            <Button type="submit" variant="contained" size="large">{submitLabel}</Button>
           </Stack>
         </CardContent>
       </Card>
