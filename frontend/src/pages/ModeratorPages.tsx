@@ -59,7 +59,7 @@ export function ModeratorDashboardPage() {
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
-      <PageHeader title="Панель модератора" subtitle="Качество кейсов, сценариев помощи и обратной связи." />
+      <PageHeader hero title="Панель модератора" subtitle="Качество кейсов, сценариев помощи и обратной связи." />
       <Box sx={{ mb: 2 }}><MetricGrid metrics={data.analytics.metrics} /></Box>
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} lg={6}><BarChartBlock title="Самые востребованные наставники" data={data.analytics.agentUsage} /></Grid>
@@ -127,12 +127,12 @@ export function AgentManagementPage() {
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
-      <PageHeader title="ИИ-наставники" subtitle="Настройка ИИ-наставников и сценариев помощи." />
+      <PageHeader hero title="ИИ-наставники" subtitle="Настройка ИИ-наставников и сценариев помощи." />
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={3}><StatCard title="Активных наставников" value={data.agents.filter((item) => item.status === 'ACTIVE').length} icon={<SmartToyRoundedIcon />} /></Grid>
-        <Grid item xs={12} md={3}><StatCard title="Сессий с наставниками" value={data.analytics.metrics.find((item) => item.label === 'mentorSessions')?.value ?? 0} icon={<InsightsRoundedIcon />} /></Grid>
-        <Grid item xs={12} md={3}><StatCard title="Средняя полезность" value={`${data.analytics.metrics.find((item) => item.label === 'agentUsefulness')?.value ?? 0}%`} icon={<FactCheckRoundedIcon />} /></Grid>
-        <Grid item xs={12} md={3}><StatCard title="Шаблонов поведения" value={data.prompts.length} icon={<TuneRoundedIcon />} /></Grid>
+        <Grid item xs={12} md={3}><StatCard color="brand" title="Активных наставников" value={data.agents.filter((item) => item.status === 'ACTIVE').length} icon={<SmartToyRoundedIcon />} /></Grid>
+        <Grid item xs={12} md={3}><StatCard color="blue" title="Сессий с наставниками" value={data.analytics.metrics.find((item) => item.label === 'mentorSessions')?.value ?? 0} icon={<InsightsRoundedIcon />} /></Grid>
+        <Grid item xs={12} md={3}><StatCard color="amber" title="Средняя полезность" value={`${data.analytics.metrics.find((item) => item.label === 'agentUsefulness')?.value ?? 0}%`} icon={<FactCheckRoundedIcon />} /></Grid>
+        <Grid item xs={12} md={3}><StatCard color="violet" title="Шаблонов поведения" value={data.prompts.length} icon={<TuneRoundedIcon />} /></Grid>
       </Grid>
       <Grid container spacing={2} sx={{ mb: 2 }}>
         <Grid item xs={12} lg={6}><BarChartBlock title="Использование наставников" data={data.analytics.agentUsage} /></Grid>
@@ -231,7 +231,7 @@ export function MasterPromptManagementPage() {
   const agentsById = new Map(data.agents.map((agent) => [agent.id, agent]));
   return (
     <Box>
-      <PageHeader title="Мастер-промпты наставников" subtitle="Шаблоны поведения наставников: версии, статусы и сценарии помощи." />
+      <PageHeader hero title="Мастер-промпты наставников" subtitle="Шаблоны поведения наставников: версии, статусы и сценарии помощи." />
       <Alert severity="warning" sx={{ mb: 2 }}>
         Наставник должен помогать участнику думать и проверять решение, а не выполнять кейс вместо него.
       </Alert>
