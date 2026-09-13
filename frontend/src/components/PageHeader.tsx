@@ -1,5 +1,6 @@
 import { Box, Stack, Typography, alpha } from '@mui/material';
 import React from 'react';
+import { brand } from '../theme/theme';
 
 interface PageHeaderProps {
   title: string;
@@ -21,7 +22,7 @@ export function PageHeader({ title, subtitle, actions, hero = false }: PageHeade
           p: { xs: 3, md: 4 },
           mb: 3,
           color: 'white',
-          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+          background: `linear-gradient(135deg, ${brand.forest} 0%, ${brand.teal} 62%, ${brand.lime} 100%)`
         }}
       >
         <Box aria-hidden sx={{ position: 'absolute', right: -120, top: -120, width: 360, height: 360, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
@@ -33,7 +34,7 @@ export function PageHeader({ title, subtitle, actions, hero = false }: PageHeade
           sx={{ position: 'relative' }}
         >
           <Box sx={{ maxWidth: 640 }}>
-            <Typography sx={{ fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>{title}</Typography>
+            <Typography sx={{ fontFamily: 'Manrope, sans-serif', fontSize: { xs: 26, md: 34 }, fontWeight: 800, letterSpacing: '-0.02em' }}>{title}</Typography>
             {subtitle && <Typography sx={{ mt: 1, color: alpha('#fff', 0.85) }}>{subtitle}</Typography>}
           </Box>
           {actions}

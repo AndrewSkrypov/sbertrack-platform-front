@@ -41,6 +41,7 @@ import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
 import { useApi } from '../hooks/useApi';
+import { brand } from '../theme/theme';
 import {
   Competency,
   CvBookCandidate,
@@ -94,7 +95,7 @@ export function CustomerDashboardPage() {
           p: { xs: 3, md: 4 },
           mb: 3,
           color: 'white',
-          background: 'linear-gradient(135deg, #075747 0%, #0b7a64 62%, #16803c 100%)'
+          background: `linear-gradient(135deg, ${brand.forest} 0%, ${brand.teal} 62%, ${brand.lime} 100%)`
         }}
       >
         <Box aria-hidden sx={{ position: 'absolute', right: -120, top: -120, width: 360, height: 360, borderRadius: '50%', background: alpha('#fff', 0.07) }} />
@@ -139,7 +140,7 @@ export function CustomerDashboardPage() {
                   <Paper key={candidate.id} variant="outlined" sx={{ p: 1.5, cursor: 'pointer' }} onClick={() => navigate(`/customer/cv-book/${candidate.id}`)}>
                     <Stack direction="row" justifyContent="space-between" spacing={1}>
                       <Box>
-                        <Typography fontWeight={900}>{candidate.fullName}</Typography>
+                        <Typography fontWeight={800}>{candidate.fullName}</Typography>
                         <Typography variant="body2" color="text.secondary">{candidate.organizationName}</Typography>
                       </Box>
                       <Chip label={priorityStatusLabels[candidate.priorityStatus]} color={candidate.priorityStatus === 'PRIORITY' ? 'success' : 'default'} />
