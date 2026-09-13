@@ -1,50 +1,87 @@
 import { alpha, createTheme } from '@mui/material/styles';
 
+// Фирменная палитра платформы «Трек». Единый источник правды — используйте
+// эти константы вместо хардкода hex-цветов в компонентах, чтобы тема
+// оставалась управляемой из одного места.
+export const brand = {
+  ink: '#0e2a22',
+  forest: '#136452',
+  teal: '#159078',
+  lime: '#3d9a55',
+  blue: '#0057d9',
+  paper: '#fafafa',
+  paperDim: '#eaf1ec',
+  stone: '#4a5a54',
+  stone2: '#7c8a84'
+} as const;
+
+export const fontDisplay = '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+export const fontBody = '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+export const fontMono = '"JetBrains Mono", ui-monospace, SFMono-Regular, monospace';
+// Публично доступный гротеск с пропорциями, близкими к корпоративному
+// шрифту финансового сектора — используется на auth-экранах (вход/регистрация),
+// где важно ощущение «банковского» интерфейса.
+export const fontSber = '"Golos Text", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
+declare module '@mui/material/styles' {
+  interface Theme {
+    brand: typeof brand;
+    fontMono: string;
+  }
+  interface ThemeOptions {
+    brand?: typeof brand;
+    fontMono?: string;
+  }
+}
+
 export const sberTrackTheme = createTheme({
+  brand,
+  fontMono,
   palette: {
     mode: 'light',
-    primary: { main: '#0b7a64', dark: '#075747', light: '#dff3ec' },
-    secondary: { main: '#2563eb', dark: '#1d4ed8', light: '#dbeafe' },
-    success: { main: '#16803c' },
-    warning: { main: '#b45309' },
-    error: { main: '#b42318' },
-    background: { default: '#f6f8fa', paper: '#ffffff' },
-    text: { primary: '#17212b', secondary: '#5b6673' }
+    primary: { main: brand.teal, dark: brand.forest, light: '#e8f5f2' },
+    secondary: { main: '#64748b', dark: '#475569', light: '#f1f5f9' },
+    success: { main: brand.lime },
+    warning: { main: '#d97706' },
+    error: { main: '#dc2626' },
+    background: { default: brand.paper, paper: '#ffffff' },
+    text: { primary: '#0f172a', secondary: '#64748b' }
   },
-  shape: { borderRadius: 12 },
+  shape: { borderRadius: 8 },
   typography: {
-    fontFamily: '"Roboto", "Arial", sans-serif',
-    h1: { fontWeight: 800, letterSpacing: '-0.02em' },
-    h2: { fontWeight: 800, letterSpacing: '-0.02em' },
-    h3: { fontWeight: 800, letterSpacing: '-0.01em' },
-    h4: { fontWeight: 800, letterSpacing: '-0.01em' },
-    h5: { fontWeight: 700 },
-    h6: { fontWeight: 700 },
-    body1: { lineHeight: 1.6 },
-    body2: { lineHeight: 1.55 },
-    button: { fontWeight: 700, textTransform: 'none' }
+    fontFamily: fontBody,
+    h1: { fontFamily: fontDisplay, fontWeight: 800, letterSpacing: '-0.03em', fontSize: '3.5rem', lineHeight: 1.05 },
+    h2: { fontFamily: fontDisplay, fontWeight: 800, letterSpacing: '-0.025em', fontSize: '2.5rem', lineHeight: 1.15 },
+    h3: { fontFamily: fontDisplay, fontWeight: 800, letterSpacing: '-0.02em', fontSize: '2rem', lineHeight: 1.2 },
+    h4: { fontFamily: fontDisplay, fontWeight: 800, letterSpacing: '-0.015em', fontSize: '1.5rem', lineHeight: 1.3 },
+    h5: { fontFamily: fontDisplay, fontWeight: 700, fontSize: '1.25rem', lineHeight: 1.4 },
+    h6: { fontFamily: fontDisplay, fontWeight: 700, fontSize: '1.125rem', lineHeight: 1.4 },
+    body1: { lineHeight: 1.65, fontSize: '1rem' },
+    body2: { lineHeight: 1.6, fontSize: '0.875rem' },
+    button: { fontWeight: 600, textTransform: 'none', letterSpacing: '0.01em' }
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        // Единый видимый фокус-контур для клавиатурной навигации: MUI по
-        // умолчанию полагается на browser outline, который непоследователен
-        // между компонентами. :focus-visible не мешает мышиному клику.
         '*:focus-visible': {
-          outline: '2px solid #0b7a64',
+          outline: `2px solid ${brand.teal}`,
           outlineOffset: 2
         }
       }
     },
     MuiCard: {
       defaultProps: {
-        variant: 'elevation'
+        variant: 'outlined'
       },
       styleOverrides: {
         root: ({ theme, ownerState }) => ({
-          borderRadius: 12,
-          border: `1px solid ${alpha(theme.palette.divider, 0.7)}`,
-          boxShadow: ownerState.variant === 'outlined' ? 'none' : '0 1px 2px rgba(23, 33, 43, 0.04), 0 8px 24px rgba(23, 33, 43, 0.05)'
+          borderRadius: 8,
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: 'none',
+          transition: 'border-color 150ms ease',
+          '&:hover': {
+            borderColor: alpha(theme.palette.text.primary, 0.12)
+          }
         })
       }
     },
@@ -52,7 +89,7 @@ export const sberTrackTheme = createTheme({
       styleOverrides: {
         root: ({ theme, ownerState }) => ({
           backgroundImage: 'none',
-          borderRadius: 12,
+          borderRadius: 8,
           ...(ownerState.variant === 'outlined' && {
             border: `1px solid ${theme.palette.divider}`,
             boxShadow: 'none'
@@ -62,36 +99,57 @@ export const sberTrackTheme = createTheme({
     },
     MuiOutlinedInput: {
       styleOverrides: {
-        root: { borderRadius: 10 },
+        root: { borderRadius: 6 },
         notchedOutline: ({ theme }) => ({
-          borderColor: alpha(theme.palette.text.primary, 0.14)
+          borderColor: alpha(theme.palette.text.primary, 0.1)
         })
       }
     },
     MuiInputLabel: {
       styleOverrides: {
-        root: { fontWeight: 600 }
+        root: { fontWeight: 500 }
       }
     },
     MuiCardContent: {
       styleOverrides: {
-        // Единый ритм отступов внутри карточек по всей системе — вместо
-        // ситуативных p: { xs: 2.5, md: 3 } на отдельных страницах.
         root: {
-          padding: 20,
-          '&:last-child': { paddingBottom: 20 }
+          padding: 24,
+          '&:last-child': { paddingBottom: 24 }
         }
       }
     },
     MuiButton: {
       styleOverrides: {
-        root: { borderRadius: 10, minHeight: 40, boxShadow: 'none' },
-        contained: { boxShadow: 'none', '&:hover': { boxShadow: 'none' } }
+        root: {
+          borderRadius: 6,
+          minHeight: 40,
+          boxShadow: 'none',
+          padding: '8px 16px'
+        },
+        contained: {
+          boxShadow: 'none',
+          '&:hover': {
+            boxShadow: 'none',
+            transform: 'translateY(-1px)'
+          }
+        },
+        sizeSmall: {
+          minHeight: 32,
+          padding: '4px 12px'
+        },
+        sizeLarge: {
+          minHeight: 48,
+          padding: '12px 24px'
+        }
       }
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: 8, fontWeight: 600 }
+        root: {
+          borderRadius: 6,
+          fontWeight: 500,
+          fontSize: '0.8125rem'
+        }
       }
     }
   }

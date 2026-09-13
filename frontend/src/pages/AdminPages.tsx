@@ -25,7 +25,7 @@ import { SvgIconComponent } from '@mui/icons-material';
 import { CompetencyRadarChart, FunnelBlock, LineChartBlock, MetricGrid, PieChartBlock, BarChartBlock } from '../components/AnalyticsCharts';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
-import { GradientIcon } from '../components/GradientIcon';
+import { StatCard } from '../components/StatCard';
 import { useApi } from '../hooks/useApi';
 import { AdminDashboard } from '../types';
 import { get, platformApi } from '../api/client';
@@ -64,19 +64,9 @@ export function AdminDashboardPage() {
       </Grid>
 
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        {managementMetrics.map(({ label, value, Icon }, index) => (
+        {managementMetrics.map(({ label, value, Icon }) => (
           <Grid item xs={12} sm={6} md={3} key={label}>
-            <Card>
-              <CardContent>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1.5}>
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" fontWeight={700}>{label}</Typography>
-                    <Typography variant="h4" fontWeight={800}>{value}</Typography>
-                  </Box>
-                  <GradientIcon icon={<Icon />} variant={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]} />
-                </Stack>
-              </CardContent>
-            </Card>
+            <StatCard title={label} value={value} icon={<Icon />} />
           </Grid>
         ))}
       </Grid>
@@ -130,7 +120,7 @@ export function AdminDashboardPage() {
                   <Paper key={agent.id} variant="outlined" sx={{ p: 1.5 }}>
                     <Stack direction="row" justifyContent="space-between" spacing={1}>
                       <Box>
-                        <Typography fontWeight={900}>{agent.name}</Typography>
+                        <Typography fontWeight={800}>{agent.name}</Typography>
                         <Typography variant="body2" color="text.secondary">{agent.description}</Typography>
                       </Box>
                       <Chip size="small" label={agentStatusLabels[agent.status]} />

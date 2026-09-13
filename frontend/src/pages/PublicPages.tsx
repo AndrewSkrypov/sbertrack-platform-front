@@ -9,31 +9,38 @@ import {
   Divider,
   Grid,
   MenuItem,
-  Paper,
   Stack,
   TextField,
   Typography,
-  alpha,
-  useTheme
+  alpha
 } from '@mui/material';
 import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 import PersonAddAltRoundedIcon from '@mui/icons-material/PersonAddAltRounded';
-import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
-import AccountTreeRoundedIcon from '@mui/icons-material/AccountTreeRounded';
-import TimelineRoundedIcon from '@mui/icons-material/TimelineRounded';
-import PsychologyRoundedIcon from '@mui/icons-material/PsychologyRounded';
-import AssignmentTurnedInRoundedIcon from '@mui/icons-material/AssignmentTurnedInRounded';
-import WorkspacePremiumRoundedIcon from '@mui/icons-material/WorkspacePremiumRounded';
 import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
-import { FormEvent, ReactNode, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { post } from '../api/client';
 import { useAuth } from '../auth/AuthProvider';
-import heroPlatform from '../assets/hero-platform.png';
 import { Role, StudentType, UserSession } from '../types';
-import { competencyDescriptions, competencyLabels } from '../shared/labels';
 import { BrandBackdrop } from '../components/BrandBackdrop';
-import { GradientIcon } from '../components/GradientIcon';
+import { brand, fontMono, fontSber } from '../theme/theme';
+import { ProcessScrollSection, ProcessStep } from './landing/ProcessScrollSection';
+import { CompetencyGrid, CompetencyCardData } from './landing/CompetencyGrid';
+import { SignInIllustration } from './landing/SignInIllustration';
+import {
+  AiSynergyIcon,
+  ArrowRightIcon,
+  CaseIcon,
+  CollaborationIcon,
+  FeedbackIcon,
+  MentorIcon,
+  PortfolioIcon,
+  ResultIcon,
+  RoadmapIcon,
+  SystemsThinkingIcon,
+  TrajectoryIcon,
+  UncertaintyIcon
+} from './landing/icons';
 
 const demoAccounts = [
   { label: 'Войти как студент', email: 'student@example.com' },
@@ -42,150 +49,286 @@ const demoAccounts = [
   { label: 'Войти как администратор', email: 'admin@example.com' }
 ];
 
-const workSteps = [
-  ['Выбираешь траекторию', AccountTreeRoundedIcon],
-  ['Получаешь дорожную карту', TimelineRoundedIcon],
-  ['Выполняешь кейсы', AssignmentTurnedInRoundedIcon],
-  ['Работаешь с ИИ-наставниками', PsychologyRoundedIcon],
-  ['Получаешь обратную связь', WorkspacePremiumRoundedIcon],
-  ['Собираешь портфолио', ArrowForwardRoundedIcon]
+const processSteps: ProcessStep[] = [
+  { title: 'Выбираешь траекторию', Icon: TrajectoryIcon, description: 'Смотришь на карту направлений, соотносишь со своим опытом и выбираешь трек, который приведёт к конкретной профессиональной цели.' },
+  { title: 'Получаешь дорожную карту', Icon: RoadmapIcon, description: 'Платформа собирает индивидуальный план: от вводных этапов до финальной защиты, с понятными контрольными точками.' },
+  { title: 'Выполняешь кейсы', Icon: CaseIcon, description: 'Берёшь реальные задачи от компаний-заказчиков — не учебные симуляции, а рабочие брифы с настоящими ограничениями.' },
+  { title: 'Работаешь с ИИ-наставниками', Icon: MentorIcon, description: 'ИИ-наставник разбирает решение, задаёт уточняющие вопросы и подсказывает, куда копать глубже.' },
+  { title: 'Получаешь обратную связь', Icon: FeedbackIcon, description: 'Обратная связь приходит не оценкой, а конкретными выводами — что усилило кейс, а что стоит пересобрать.' },
+  { title: 'Собираешь портфолио', Icon: PortfolioIcon, description: 'Лучшие решения и выводы автоматически попадают в портфолио, которое видят заказчики на витрине кандидатов.' }
+];
+
+const competencyItems: CompetencyCardData[] = [
+  { key: 'systems', title: 'Системное мышление', Icon: SystemsThinkingIcon, description: 'Видит задачу как часть более крупного процесса и предсказывает последствия решений.' },
+  { key: 'uncertainty', title: 'Работа с неопределённостью', Icon: UncertaintyIcon, description: 'Принимает решения при неполных данных и не останавливается перед нестандартной задачей.' },
+  { key: 'collaboration', title: 'Коммуникация и обратная связь', Icon: CollaborationIcon, description: 'Формулирует мысль так, чтобы её поняли, и умеет принимать критику по делу.' },
+  { key: 'result', title: 'Ориентация на результат', Icon: ResultIcon, description: 'Доводит кейс до конечного артефакта, а не до половины плана.' },
+  { key: 'ai', title: 'Работа с данными и ИИ', Icon: AiSynergyIcon, description: 'Использует ИИ-инструменты как рабочий инструмент, а не как замену собственному выводу.' }
+];
+
+const heroTiles = [
+  { title: 'Траектории развития', text: 'Студент выбирает направление и видит путь к состоянию «маяк профессии».', Icon: TrajectoryIcon },
+  { title: 'Портфолио из реальных кейсов', text: 'В портфолио попадают артефакты, решения и ключевые выводы обратной связи.', Icon: PortfolioIcon },
+  { title: 'Витрина кандидатов', text: 'Заказчики видят сильных участников и могут отмечать приоритетных кандидатов.', Icon: CaseIcon }
 ];
 
 export function PublicLandingPage() {
-  const theme = useTheme();
   const navigate = useNavigate();
+  const [tilesIn, setTilesIn] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setTilesIn(true), 200);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      {/* ---------- NAV ---------- */}
       <Box
+        component="nav"
         sx={{
-          minHeight: { xs: 720, md: 760 },
-          display: 'flex',
-          alignItems: 'stretch',
-          backgroundImage: `linear-gradient(90deg, rgba(4,31,27,0.92) 0%, rgba(6,55,48,0.78) 44%, rgba(6,55,48,0.18) 76%), url(${heroPlatform})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          position: 'sticky',
+          top: 0,
+          zIndex: 50,
+          bgcolor: alpha('#fff', 0.6),
+          backdropFilter: 'blur(14px)',
+          borderBottom: `1px solid ${alpha(brand.forest, 0.1)}`
         }}
       >
-        <Container maxWidth="xl" sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', py: 4 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center">
-            <Typography 
-              variant="h5" 
-              fontWeight={900} 
-              sx={{ 
-                color: 'white', 
-                letterSpacing: '-0.01em',
-                fontFamily: '"SB Sans Display", sans-serif'
+        <Container maxWidth="xl" sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+          <Typography sx={{ color: brand.forest, fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em' }}>
+            Трек
+          </Typography>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate('/sign-in')}
+              sx={{ color: brand.forest, borderColor: alpha(brand.forest, 0.3), '&:hover': { borderColor: brand.forest, bgcolor: alpha(brand.forest, 0.06) } }}
+            >
+              Войти
+            </Button>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/sign-up')}
+              sx={{ bgcolor: brand.blue, '&:hover': { bgcolor: '#0048b0' } }}
+            >
+              Создать аккаунт
+            </Button>
+          </Stack>
+        </Container>
+      </Box>
+
+      {/* ---------- HERO ---------- */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 2,
+          overflow: 'hidden',
+          pt: { xs: 6, md: 8 },
+          pb: { xs: 5, md: 7 },
+          borderRadius: '0 0 32px 32px',
+          mb: '-32px',
+          background: `
+            radial-gradient(ellipse 1000px 600px at 12% -10%, ${alpha('#21A038', 0.14)}, transparent 60%),
+            radial-gradient(ellipse 900px 600px at 100% 0%, ${alpha('#149137', 0.12)}, transparent 55%),
+            linear-gradient(160deg, #d0f7e0 0%, #e8fdf1 45%, #eff7f7 100%)
+          `
+        }}
+      >
+        <Container maxWidth="xl">
+          <Chip
+            label="Платформа траекторий развития"
+            icon={<Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: brand.lime, ml: '10px !important' }} />}
+            sx={{ mb: 3.5, bgcolor: alpha('#fff', 0.7), color: brand.forest, border: `1px solid ${alpha(brand.forest, 0.16)}` }}
+          />
+          <Typography
+            sx={{
+              color: '#0f2a22',
+              fontFamily: 'Manrope, sans-serif',
+              fontWeight: 800,
+              letterSpacing: '-0.03em',
+              fontSize: { xs: 40, sm: 56, md: 'clamp(40px, 6vw, 76px)' },
+              lineHeight: 0.98,
+              maxWidth: 820,
+              mb: 3
+            }}
+          >
+            Путь от старта{' '}
+            <Box
+              component="span"
+              sx={{
+                background: `linear-gradient(90deg, ${brand.forest}, ${brand.teal})`,
+                WebkitBackgroundClip: 'text',
+                backgroundClip: 'text',
+                color: 'transparent'
               }}
             >
-              Трек
-            </Typography>
-            <Stack direction="row" spacing={1}>
-              <Button
-                variant="contained"
-                startIcon={<LoginRoundedIcon />}
-                onClick={() => navigate('/sign-in')}
-                sx={{ bgcolor: 'white', color: 'primary.dark', '&:hover': { bgcolor: alpha('#fff', 0.9) } }}
-              >
-                Войти
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => navigate('/sign-up')}
-                sx={{ bgcolor: alpha('#0066FF', 0.8), color: 'white', borderColor: alpha('#fff', 0.6), '&:hover': { borderColor: 'white', bgcolor: alpha('#fff', 0.8) } }}
-              >
-                Создать аккаунт
-              </Button>
-            </Stack>
+              до маяка профессии
+            </Box>
+          </Typography>
+          <Typography sx={{ color: alpha('#0f2a22', 0.68), fontSize: 19, lineHeight: 1.55, maxWidth: 600, mb: 4.5 }}>
+            Реальные кейсы от заказчиков, дорожная карта студента, ИИ-наставники и портфолио, которое действительно смотрят работодатели.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.75} sx={{ mb: { xs: 6, md: 8 } }}>
+            <Button
+              size="large"
+              endIcon={<ArrowRightIcon />}
+              onClick={() => navigate('/sign-in')}
+              sx={{ bgcolor: brand.forest, color: '#fff', px: 3, py: 1.5, fontSize: 15, '&:hover': { bgcolor: brand.ink } }}
+            >
+              Открыть демо-версию
+            </Button>
+            <Button
+              size="large"
+              variant="outlined"
+              onClick={() => navigate('/sign-up')}
+              sx={{ color: brand.forest, borderColor: alpha(brand.forest, 0.35), px: 3, py: 1.5, fontSize: 15, '&:hover': { borderColor: brand.forest, bgcolor: alpha(brand.forest, 0.06) } }}
+            >
+              Стать участником
+            </Button>
           </Stack>
-          <Box sx={{ maxWidth: 790, color: 'white', py: { xs: 6, md: 10 } }}>
-            <Chip
-              label="Платформа траекторий развития"
-              sx={{ mb: 2, bgcolor: alpha('#fff', 0.16), color: 'white', border: `1px solid ${alpha('#fff', 0.24)}` }}
-            />
-            <Typography variant="h1" sx={{ fontSize: { xs: 42, md: 72 }, lineHeight: 1.02, mb: 2 }}>
-              Трек
-            </Typography>
-            <Typography variant="h5" sx={{ color: alpha('#fff', 0.88), maxWidth: 720, mb: 4 }}>
-              Реальные кейсы от заказчиков, выбор маяка профессии, дорожная карта студента, ИИ-наставники и портфолио из реальных кейсов.
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-              <Button size="large" variant="contained" endIcon={<ArrowForwardRoundedIcon />} onClick={() => navigate('/sign-in')}>
-                Открыть демо-версию
-              </Button>
-              <Button size="large" variant="outlined" color="inherit" onClick={() => navigate('/sign-up')} sx={{ borderColor: alpha('#fff', 0.45), color: 'white' }}>
-                Стать участником
-              </Button>
-            </Stack>
-          </Box>
-          <Grid container spacing={2} sx={{ pb: 1 }}>
-            {[
-              ['Траектории развития', 'Студент выбирает направление и видит путь к состоянию “маяк профессии”.'],
-              ['Портфолио из реальных кейсов', 'В портфолио попадают артефакты, решения и ключевые выводы обратной связи.'],
-              ['Витрина кандидатов', 'Заказчики видят сильных участников и могут отмечать приоритетных кандидатов.']
-            ].map(([title, text]) => (
-              <Grid item xs={12} md={4} key={title}>
-                <Paper sx={{ p: 2, bgcolor: alpha('#fff', 0.12), color: 'white', border: `1px solid ${alpha('#fff', 0.18)}`, borderRadius: 1, backdropFilter: 'blur(10px)' }}>
-                  <Typography fontWeight={900}>{title}</Typography>
-                  <Typography variant="body2" sx={{ color: alpha('#fff', 0.76), mt: 0.5 }}>{text}</Typography>
-                </Paper>
-              </Grid>
-            ))}
+          <Grid container spacing={1.75}>
+            {heroTiles.map((tile, index) => {
+              const Icon = tile.Icon;
+              return (
+                <Grid item xs={12} md={4} key={tile.title}>
+                  <Box
+                    sx={{
+                      bgcolor: alpha('#fff', 0.55),
+                      border: `1px solid ${alpha(brand.forest, 0.12)}`,
+                      borderRadius: 2,
+                      p: 2.5,
+                      backdropFilter: 'blur(6px)',
+                      opacity: tilesIn ? 1 : 0,
+                      transform: tilesIn ? 'translateY(0)' : 'translateY(16px)',
+                      transition: `opacity .6s ease ${index * 0.14}s, transform .6s ease ${index * 0.14}s`
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: 1.5,
+                        display: 'grid',
+                        placeItems: 'center',
+                        bgcolor: alpha(brand.teal, 0.16),
+                        color: brand.forest,
+                        mb: 1.5
+                      }}
+                    >
+                      <Icon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Typography sx={{ color: '#0f2a22', fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 16, mb: 0.75 }}>
+                      {tile.title}
+                    </Typography>
+                    <Typography sx={{ color: alpha('#0f2a22', 0.62), fontSize: 13.5, lineHeight: 1.5 }}>{tile.text}</Typography>
+                  </Box>
+                </Grid>
+              );
+            })}
           </Grid>
         </Container>
       </Box>
 
-      <Container maxWidth="xl" sx={{ py: 6 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} lg={5}>
-            <Typography variant="h3">Как работает Трек</Typography>
-            <Typography color="text.secondary" sx={{ mt: 1, maxWidth: 620 }}>
-              Платформа ведёт участника не по случайному списку задач, а по понятной ветке роста: от вводных этапов до итоговой защиты и портфолио.
+      {/* ---------- SIGNATURE STICKY-SCROLL PROCESS ---------- */}
+      <ProcessScrollSection steps={processSteps} />
+
+      {/* Светлая секция «наезжает» скруглёнными краями сверху и снизу —
+          сверху на тёмный sticky-scroll блок, снизу на тёмный футер —
+          тот же приём, что на референсе Сбера. Скругление всегда
+          принадлежит светлому слою, лежащему поверх тёмного. */}
+      <Box
+        sx={{
+          position: 'relative',
+          zIndex: 2,
+          bgcolor: brand.paper,
+          borderRadius: '32px',
+          mt: '-32px',
+          mb: '-32px'
+        }}
+      >
+        {/* ---------- COMPETENCY GRID ---------- */}
+        <Container maxWidth="xl" sx={{ pt: { xs: 7, md: 9 }, pb: { xs: 7, md: 12 } }}>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ md: 'flex-end' }}
+            spacing={2}
+            sx={{ mb: 6 }}
+          >
+            <Box>
+              <Typography sx={{ fontFamily: fontMono, fontSize: 12, letterSpacing: '0.08em', textTransform: 'uppercase', color: brand.teal, mb: 1.25 }}>
+                Профиль роста
+              </Typography>
+              <Typography sx={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: { xs: 28, md: 'clamp(28px, 3.4vw, 42px)' }, maxWidth: 600 }}>
+                Пять компетенций лидера будущего
+              </Typography>
+            </Box>
+            <Typography sx={{ color: brand.stone, fontSize: 16, lineHeight: 1.55, maxWidth: 380 }}>
+              Каждый кейс на платформе развивает конкретную компетенцию — прогресс виден в профиле, а не только в оценке.
             </Typography>
-          </Grid>
-          <Grid item xs={12} lg={7}>
-            <Grid container spacing={1.5}>
-              {workSteps.map(([title, Icon], index) => (
-                <Grid item xs={12} sm={6} md={4} key={title as string}>
-                  <Card sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
-                        <GradientIcon icon={<Icon />} variant={(['brand', 'blue', 'amber', 'violet'] as const)[index % 4]} />
-                        <Typography variant="caption" color="text.secondary" fontWeight={900}>Шаг {index + 1}</Typography>
-                      </Stack>
-                      <Typography variant="h6" sx={{ mt: 2 }}>{title as string}</Typography>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              ))}
-            </Grid>
-          </Grid>
-        </Grid>
-      </Container>
+          </Stack>
+          <CompetencyGrid items={competencyItems} />
+        </Container>
 
-      <Container maxWidth="xl" sx={{ pb: 7 }}>
-        <Typography variant="h4" sx={{ mb: 2 }}>Пять компетенций лидера будущего</Typography>
-        <Grid container spacing={2}>
-          {Object.entries(competencyLabels).map(([competency, title]) => (
-            <Grid item xs={12} sm={6} md={2.4} key={competency}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Typography variant="h6">{title}</Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    {competencyDescriptions[competency as keyof typeof competencyDescriptions]}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Container>
+        {/* ---------- CTA BAND ---------- */}
+        <Container maxWidth="xl" sx={{ pb: { xs: 8, md: 12 } }}>
+          <Box
+            sx={{
+              background: `linear-gradient(120deg, ${brand.forest}, ${brand.teal} 70%, ${brand.lime})`,
+              borderRadius: 4,
+              p: { xs: 4, md: 6 },
+              display: 'flex',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 4
+            }}
+          >
+            <Box>
+              <Typography sx={{ color: '#fff', fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: { xs: 24, md: 'clamp(24px, 3vw, 34px)' }, maxWidth: 480 }}>
+                Готов пройти путь до маяка профессии?
+              </Typography>
+              <Typography sx={{ color: alpha('#fff', 0.78), fontSize: 15, maxWidth: 420, mt: 1.25 }}>
+                Открой демо-версию и посмотри, как выглядит твоя первая траектория.
+              </Typography>
+            </Box>
+            <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>
+              <Button
+                size="large"
+                onClick={() => navigate('/sign-in')}
+                sx={{ bgcolor: '#fff', color: brand.forest, px: 3, '&:hover': { bgcolor: alpha('#fff', 0.9) } }}
+              >
+                Открыть демо-версию
+              </Button>
+              <Button
+                size="large"
+                variant="outlined"
+                onClick={() => navigate('/sign-up')}
+                sx={{ color: '#fff', borderColor: alpha('#fff', 0.45), px: 3, '&:hover': { borderColor: '#fff', bgcolor: alpha('#fff', 0.1) } }}
+              >
+                Стать участником
+              </Button>
+            </Stack>
+          </Box>
+        </Container>
+      </Box>
 
-      <Box component="footer" sx={{ position: 'relative', overflow: 'hidden', borderTop: 1, borderColor: 'divider' }}>
+      {/* Тёмный футер — плоский фон под скруглённым низом светлой секции
+          выше; собственного скругления не несёт. */}
+      <Box
+        component="footer"
+        sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          bgcolor: brand.ink
+        }}
+      >
         <BrandBackdrop preset="landing" />
-        <Container maxWidth="xl" sx={{ position: 'relative', py: 3 }}>
+        <Container maxWidth="xl" sx={{ position: 'relative', py: { xs: 4, md: 5 } }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
-            <Typography variant="body2" color="text.secondary">Трек — демонстрационный прототип</Typography>
-            <Typography variant="body2" color="text.secondary">2026</Typography>
+            <Typography variant="body2" sx={{ color: alpha('#fff', 0.6) }}>Трек — демонстрационный прототип</Typography>
+            <Typography variant="body2" sx={{ color: alpha('#fff', 0.6) }}>2026</Typography>
           </Stack>
         </Container>
       </Box>
@@ -210,84 +353,173 @@ export function SignInPage() {
   }
 
   return (
-    <AuthPageFrame title="Вход" subtitle="Платформа практических кейсов и траекторий развития.">
-      <Stack spacing={0.5} sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight={900}>Обычный вход</Typography>
-        <Typography variant="body2" color="text.secondary">Введите данные своей учётной записи.</Typography>
-      </Stack>
-      <Stack component="form" spacing={2.5} onSubmit={submit} sx={{ maxWidth: 520 }}>
-        {error && <Alert severity="error">{error}</Alert>}
-        <FormField label="Email">
-          <TextField
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            fullWidth
-            required
-            type="email"
-            placeholder="name@example.com"
-          />
-        </FormField>
-        <FormField label="Пароль">
-          <TextField
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            fullWidth
-            required
-            type="password"
-            placeholder="••••••••"
-          />
-        </FormField>
-        <Button type="submit" variant="contained" size="large" startIcon={<LoginRoundedIcon />}>Войти</Button>
-        <Button component={RouterLink} to="/sign-up" startIcon={<PersonAddAltRoundedIcon />} color="inherit">
-          Создать аккаунт
-        </Button>
-      </Stack>
-
-      <Divider sx={{ my: 4 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight={700}>ИЛИ ДЕМО-ДОСТУП</Typography>
-      </Divider>
-
-      <Stack spacing={1.25} sx={{ maxWidth: 520 }}>
-        <Typography variant="body2" color="text.secondary">
-          Демо-профили используют тестовый пароль — можно сразу посмотреть платформу с ролью.
+    <Box
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+        background: `
+          radial-gradient(ellipse 1000px 700px at 10% 0%, ${alpha(brand.lime, 0.22)}, transparent 55%),
+          radial-gradient(ellipse 900px 800px at 100% 100%, ${alpha(brand.teal, 0.2)}, transparent 55%),
+          #f6faf8
+        `
+      }}
+    >
+      <Box sx={{ px: { xs: 3, md: 5 }, py: 3, position: 'relative' }}>
+        <Typography
+          component={RouterLink}
+          to="/"
+          sx={{ fontFamily: fontSber, fontWeight: 800, fontSize: 22, color: '#292929', textDecoration: 'none' }}
+        >
+          Трек
         </Typography>
-        <Grid container spacing={1.5}>
-          {demoAccounts.map((account) => (
-            <Grid item xs={12} sm={6} key={account.email}>
+      </Box>
+
+      <Box
+        sx={{
+          flexGrow: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          position: 'relative',
+          px: { xs: 3, md: 6 },
+          pb: { xs: 4, md: 6 }
+        }}
+      >
+        <Box
+          sx={{
+            display: { xs: 'none', lg: 'flex' },
+            position: 'absolute',
+            left: '25%',
+            top: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: 380,
+            opacity: 0.9
+          }}
+        >
+          <SignInIllustration />
+        </Box>
+
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: 440,
+            position: { lg: 'absolute' },
+            left: { lg: '72%' },
+            top: { lg: '50%' },
+            transform: { lg: 'translate(-50%, -50%)' }
+          }}
+        >
+          <Box
+            sx={{
+              width: '100%',
+              p: { xs: 3, md: 5 },
+              bgcolor: '#fff',
+              borderRadius: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 3,
+              boxSizing: 'border-box',
+              boxShadow: '0 24px 64px rgba(6, 32, 26, 0.08)',
+              fontFamily: fontSber
+            }}
+          >
+            <Box>
+              <Typography sx={{ fontFamily: fontSber, fontWeight: 700, fontSize: 30, lineHeight: 1.15, color: '#292929' }}>
+                Добро пожаловать!
+              </Typography>
+              <Typography sx={{ fontFamily: fontSber, fontSize: 14, color: '#292929', mt: 1 }}>
+                Войдите, чтобы продолжить путь к маяку профессии.
+              </Typography>
+            </Box>
+
+            <Stack component="form" spacing={2} onSubmit={submit}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <FormField label="Email">
+                <TextField
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  fullWidth
+                  required
+                  type="email"
+                  placeholder="name@example.com"
+                  size="small"
+                  sx={{ '& .MuiInputBase-input': { fontFamily: fontSber } }}
+                />
+              </FormField>
+              <FormField label="Пароль">
+                <TextField
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  fullWidth
+                  required
+                  type="password"
+                  placeholder="••••••••"
+                  size="small"
+                  sx={{ '& .MuiInputBase-input': { fontFamily: fontSber } }}
+                />
+              </FormField>
               <Button
-                fullWidth
-                onClick={() => signIn(account.email)}
-                disableElevation
+                type="submit"
                 sx={{
-                  height: 88,
+                  height: 48,
                   borderRadius: 2,
-
-                  bgcolor: '#F8FAFC',
-                  border: '1px solid',
-                  borderColor: '#E5E7EB',
-
-                  color: '#111827',
-                  fontSize: '1.05rem',
-                  fontWeight: 700,
-                  textTransform: 'none',
-
-                  transition: 'all .2s ease',
-
-                  '&:hover': {
-                    bgcolor: '#F1F5F9',
-                    borderColor: '#CBD5E1',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 8px 24px rgba(15,23,42,.08)'
-                  }
+                  bgcolor: brand.teal,
+                  color: '#fff',
+                  fontFamily: fontSber,
+                  fontWeight: 600,
+                  fontSize: 16,
+                  '&:hover': { bgcolor: brand.forest }
                 }}
               >
-                {account.label}
+                Войти
               </Button>
-            </Grid>
-          ))}
-        </Grid>
-      </Stack>
-    </AuthPageFrame>
+            </Stack>
+
+            <Typography sx={{ fontFamily: fontSber, fontSize: 14, color: '#292929' }}>
+              Нет аккаунта?{' '}
+              <Typography component={RouterLink} to="/sign-up" sx={{ fontFamily: fontSber, color: '#0066ff', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>
+                Создать аккаунт
+              </Typography>
+            </Typography>
+
+            <Divider />
+
+            <Box>
+              <Typography sx={{ fontFamily: fontSber, fontSize: 13, color: '#292929', mb: 1.5 }}>
+                Демо-профили используют тестовый пароль — можно сразу посмотреть платформу с ролью.
+              </Typography>
+              <Stack spacing={1}>
+                {demoAccounts.map((account) => (
+                  <Button
+                    key={account.email}
+                    fullWidth
+                    onClick={() => signIn(account.email)}
+                    disableElevation
+                    sx={{
+                      height: 48,
+                      borderRadius: 2,
+                      bgcolor: brand.paperDim,
+                      color: brand.forest,
+                      fontFamily: fontSber,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      justifyContent: 'flex-start',
+                      px: 2,
+                      '&:hover': { bgcolor: alpha(brand.teal, 0.16) }
+                    }}
+                  >
+                    {account.label}
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 }
 
@@ -395,7 +627,17 @@ export function AccessDeniedPage() {
 
 function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
-    <Box sx={{ position: 'relative', minHeight: '100vh', display: 'grid', placeItems: 'center', p: 2, overflow: 'hidden', background: 'radial-gradient(circle at 0% 100%, rgba(22,163,74,0.12), transparent 35%), radial-gradient(circle at 100% 0%, rgba(20,184,166,0.08), transparent 35%), linear-gradient(135deg, #f8fafc 0%, #eefbf7 50%, #f3faf7 100%)' }}>
+    <Box
+      sx={{
+        position: 'relative',
+        minHeight: '100vh',
+        display: 'grid',
+        placeItems: 'center',
+        p: 2,
+        overflow: 'hidden',
+        background: `radial-gradient(circle at 0% 100%, ${alpha(brand.lime, 0.12)}, transparent 35%), radial-gradient(circle at 100% 0%, ${alpha(brand.teal, 0.08)}, transparent 35%), linear-gradient(135deg, #f8fafc 0%, ${brand.paperDim} 50%, #f3faf7 100%)`
+      }}
+    >
       <BrandBackdrop preset="auth" fixed />
       <Card sx={{ position: 'relative', maxWidth: 1040, width: '100%', overflow: 'hidden' }}>
         <Grid container>
@@ -411,7 +653,7 @@ function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle:
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
-                background: 'linear-gradient(150deg, #075747 0%, #0b7a64 58%, #16803c 100%)'
+                background: `linear-gradient(150deg, ${brand.forest} 0%, ${brand.teal} 58%, ${brand.lime} 100%)`
               }}
             >
               <Box aria-hidden sx={{ position: 'absolute', right: -90, top: -90, width: 260, height: 260, borderRadius: '50%', background: alpha('#fff', 0.08) }} />
@@ -436,7 +678,7 @@ function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle:
             </Box>
           </Grid>
           <Grid item xs={12} md={7}>
-            <CardContent sx={{ p: { xs: 3, md: 4 } }}>{children}</CardContent>
+            <CardContent sx={{ p: { xs: 3, md: 4 }, fontFamily: fontSber, '& .MuiInputBase-input': { fontFamily: fontSber } }}>{children}</CardContent>
           </Grid>
         </Grid>
       </Card>
@@ -446,39 +688,23 @@ function AuthPageFrame({ title, subtitle, children }: { title: string; subtitle:
 
 function LogoMark({ light = false }: { light?: boolean }) {
   return (
-    <Stack direction="row" spacing={1.25} alignItems="center">
-      {/* <Box
+    <Box>
+      <Typography
         sx={{
-          width: 44,
-          height: 44,
-          borderRadius: 2,
-          display: 'grid',
-          placeItems: 'center',
-          fontWeight: 900,
-          color: 'white',
-          // На тёмном фоне — белая стеклянная плашка; на светлом — фирменный
-          // градиент (тот же язык, что у hero-блоков и иконок платформы).
-          background: light ? alpha('#fff', 0.16) : 'linear-gradient(135deg, #075747 0%, #0b7a64 60%, #16803c 100%)',
-          border: light ? `1px solid ${alpha('#fff', 0.28)}` : 'none',
-          boxShadow: light ? 'none' : '0 4px 12px rgba(11, 122, 100, 0.28)'
+          fontFamily: 'Manrope, sans-serif',
+          fontSize: 40,
+          fontWeight: 800,
+          letterSpacing: '-0.03em',
+          lineHeight: 1,
+          mb: 1,
+          color: light ? '#fff' : 'text.primary'
         }}
       >
-        СТ */}
-      {/* </Box> */}
-      <Box>
-        <Typography variant="h5" fontWeight={900} color={light ? 'white' : 'text.primary'}
-          sx={{
-            fontSize: 62,
-            fontWeight: 900,
-            letterSpacing: '-0.03em',
-            lineHeight: 1,
-            mb: 1}}>
-         Трек
-        </Typography>
-        <Typography variant="caption" color={light ? alpha('#fff', 0.76) : 'text.secondary'}>
-          Платформа практических кейсов <br /> и траекторий развития
-        </Typography>
-      </Box>
-    </Stack>
+        Трек
+      </Typography>
+      <Typography variant="caption" color={light ? alpha('#fff', 0.76) : 'text.secondary'}>
+        Платформа практических кейсов <br /> и траекторий развития
+      </Typography>
+    </Box>
   );
 }
