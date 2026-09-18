@@ -1,4 +1,4 @@
-import { alpha, createTheme } from '@mui/material/styles';
+import { alpha, createTheme, responsiveFontSizes } from '@mui/material/styles';
 
 // Фирменная палитра платформы «Трек». Единый источник правды — используйте
 // эти константы вместо хардкода hex-цветов в компонентах, чтобы тема
@@ -34,7 +34,7 @@ declare module '@mui/material/styles' {
   }
 }
 
-export const sberTrackTheme = createTheme({
+export const sberTrackTheme = responsiveFontSizes(createTheme({
   brand,
   fontMono,
   palette: {
@@ -115,20 +115,29 @@ export const sberTrackTheme = createTheme({
     },
     MuiCardContent: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           padding: 24,
-          '&:last-child': { paddingBottom: 24 }
-        }
+          '&:last-child': { paddingBottom: 24 },
+          [theme.breakpoints.down('sm')]: {
+            padding: 16,
+            '&:last-child': { paddingBottom: 16 }
+          }
+        })
       }
     },
     MuiButton: {
       styleOverrides: {
-        root: {
+        root: ({ theme }) => ({
           borderRadius: 6,
           minHeight: 40,
           boxShadow: 'none',
-          padding: '8px 16px'
-        },
+          padding: '8px 16px',
+          [theme.breakpoints.down('sm')]: {
+            minHeight: 36,
+            padding: '6px 14px',
+            fontSize: '0.8125rem'
+          }
+        }),
         contained: {
           boxShadow: 'none',
           '&:hover': {
@@ -154,6 +163,16 @@ export const sberTrackTheme = createTheme({
           fontSize: '0.8125rem'
         }
       }
+    },
+    MuiContainer: {
+      styleOverrides: {
+        root: ({ theme }) => ({
+          [theme.breakpoints.down('sm')]: {
+            paddingLeft: 16,
+            paddingRight: 16
+          }
+        })
+      }
     }
   }
-});
+}));
