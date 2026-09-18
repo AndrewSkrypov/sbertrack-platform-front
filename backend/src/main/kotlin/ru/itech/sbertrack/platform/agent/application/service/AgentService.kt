@@ -49,6 +49,11 @@ class AgentService(
         agentDataPort.findSessionById(id)?.let(agentMapper::toResponse)
             ?: throw NotFoundException("Сессия агента не найдена")
 
+    fun findLatestSession(agentId: UUID, caseId: UUID?, authorization: String?): AgentSessionResponse? {
+        val studentId = authService.tryCurrentUser(authorization)?.id ?: return null
+        return agentDataPort.findLatestSession(studentId, agentId, caseId)?.let(agentMapper::toResponse)
+    }
+
     fun sendMessage(sessionId: UUID, request: AgentMessageRequest): AgentSessionResponse {
         val session = agentDataPort.findSessionById(sessionId) ?: throw NotFoundException("Сессия агента не найдена")
         val agent = agentDataPort.findAgentById(session.agentId) ?: throw NotFoundException("Агент не найден")

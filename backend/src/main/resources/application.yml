@@ -7,6 +7,35 @@ spring:
   jackson:
     serialization:
       write-dates-as-timestamps: false
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:sbertrack}
+    username: ${DB_USER:sbertrack}
+    password: ${DB_PASSWORD:sbertrack}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  mail:
+    host: ${SPRING_MAIL_HOST:}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:}
+    password: ${SPRING_MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_SMTP_STARTTLS:true}
 
 springdoc:
   api-docs:
@@ -21,8 +50,24 @@ management:
     web:
       exposure:
         include: health,info
+  health:
+    mail:
+      enabled: false
 
 sbertrack:
   openapi:
     title: "СберТрек Платформа API"
     version: "0.1.0"
+  auth:
+    jwt-secret: ${JWT_SECRET:dev-only-insecure-secret-change-me-32bytes+}
+    jwt-ttl-hours: ${JWT_TTL_HOURS:24}
+  storage:
+    upload-dir: ${UPLOAD_DIR:./uploads}
+    max-size-bytes: ${UPLOAD_MAX_SIZE_BYTES:20971520}
+  agent:
+    anthropic-api-key: ${ANTHROPIC_API_KEY:}
+    anthropic-model: ${ANTHROPIC_MODEL:claude-haiku-4-5-20251001}
+    gemini-api-key: ${GEMINI_API_KEY:}
+    gemini-model: ${GEMINI_MODEL:gemini-3.6-flash}
+  notification:
+    from-email: ${SBERTRACK_NOTIFICATION_FROM_EMAIL:noreply@sbertrack.local}

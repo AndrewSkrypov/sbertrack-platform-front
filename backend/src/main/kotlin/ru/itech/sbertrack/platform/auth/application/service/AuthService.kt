@@ -13,12 +13,12 @@ import ru.itech.sbertrack.platform.user.domain.model.User
 import ru.itech.sbertrack.platform.user.domain.model.UserRole
 import ru.itech.sbertrack.platform.user.domain.model.UserStatus
 import ru.itech.sbertrack.platform.user.domain.port.UserDataPort
-import java.util.UUID
 
 @Service
 class AuthService(
     private val userDataPort: UserDataPort,
     private val userMapper: UserMapper,
+    private val jwtService: JwtService,
 ) {
     fun signIn(request: SignInRequest): UserSessionResponse {
         val user = userDataPort.findByEmail(request.email) ?: throw UnauthorizedException("Неверный логин или пароль")
@@ -52,11 +52,8 @@ class AuthService(
         session(currentUser(authorization))
 
     fun currentUser(authorization: String?): User {
-        val rawToken = authorization
-            ?.removePrefix("Bearer ")
-            ?.takeIf { it.startsWith(TOKEN_PREFIX) }
-            ?: throw UnauthorizedException()
-        val userId = UUID.fromString(rawToken.removePrefix(TOKEN_PREFIX))
+        val rawToken = authorization?.removePrefix("Bearer ")?.takeIf { it.isNotBlank() } ?: throw UnauthorizedException()
+        val userId = jwtService.parseUserId(rawToken)
         return userDataPort.findById(userId) ?: throw UnauthorizedException()
     }
 
@@ -65,11 +62,7 @@ class AuthService(
 
     private fun session(user: User): UserSessionResponse =
         UserSessionResponse(
-            token = "$TOKEN_PREFIX${user.id}",
+            token = jwtService.issue(user.id),
             user = userMapper.toResponse(user),
         )
-
-    private companion object {
-        const val TOKEN_PREFIX = "fake-token-"
-    }
 }

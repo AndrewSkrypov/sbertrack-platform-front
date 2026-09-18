@@ -290,3 +290,61 @@ export interface AdminAnalytics {
   platformCompetencies: CompetencyAnalyticsPoint[];
   participationFunnel: ChartPoint[];
 }
+
+export type NewsCategory = 'TRACK' | 'EVENT' | 'PRODUCT';
+
+export interface NewsPost {
+  id: string;
+  authorId: string;
+  authorName: string;
+  authorInitial: string;
+  category: NewsCategory;
+  pinned: boolean;
+  title: string;
+  body: string;
+  imageLabels: string[];
+  likes: number;
+  comments: number;
+  views: number;
+  publishedAt: string;
+}
+
+export interface ProfileTraits {
+  id: string;
+  studentId: string;
+  professionalTags: string[];
+  interests: string[];
+  motivations: string[];
+  abilities: { label: string; percent: number }[];
+  selfRatedSkills: { label: string; level: number }[];
+  psychotypeCompleted: boolean;
+}
+
+export interface Streak {
+  currentStreakDays: number;
+  lastActiveDate: string | null;
+  activeToday: boolean;
+}
+
+export interface PlatformEvent {
+  id: string;
+  authorId: string;
+  title: string;
+  location: string;
+  startsAt: string;
+}
+
+export type SearchResultType = 'CASE' | 'TRACK' | 'PERSON';
+
+export interface SearchResult {
+  id: string;
+  type: SearchResultType;
+  title: string;
+  subtitle: string;
+}
+
+export interface UploadedFile {
+  fileName: string;
+  url: string;
+  sizeBytes: number;
+}

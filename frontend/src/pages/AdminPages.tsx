@@ -23,6 +23,7 @@ import BusinessRoundedIcon from '@mui/icons-material/BusinessRounded';
 import FeedbackRoundedIcon from '@mui/icons-material/FeedbackRounded';
 import { SvgIconComponent } from '@mui/icons-material';
 import { CompetencyRadarChart, FunnelBlock, LineChartBlock, MetricGrid, PieChartBlock, BarChartBlock } from '../components/AnalyticsCharts';
+import { ErrorState } from '../components/ErrorState';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
@@ -32,13 +33,14 @@ import { get, platformApi } from '../api/client';
 import { agentStatusLabels, displayStatus, roleLabels, userStatusLabels } from '../shared/labels';
 
 export function AdminDashboardPage() {
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [dashboard, analytics] = await Promise.all([
       get<AdminDashboard>('/admin/dashboard'),
       platformApi.analytics.adminDashboard()
     ]);
     return { dashboard, analytics };
   }, []);
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const stats = data.dashboard.statistics;
   const managementMetrics: Array<{ label: string; value: number; Icon: SvgIconComponent }> = [
