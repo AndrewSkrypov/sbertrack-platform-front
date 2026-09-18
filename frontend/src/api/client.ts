@@ -4,6 +4,13 @@ import {
   AgentSession,
   CustomerAnalytics,
   ModeratorAnalytics,
+  NewsCategory,
+  NewsPost,
+  PlatformEvent,
+  ProfileTraits,
+  SearchResult,
+  UploadedFile,
+  Streak,
   StudentAnalytics,
   StudentRoadmap,
   Trajectory,
@@ -26,6 +33,23 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const backendMessage = error?.response?.data?.message;
+    if (typeof backendMessage === 'string' && backendMessage.trim()) {
+      return Promise.reject(new Error(backendMessage));
+    }
+    if (error?.response?.status === 401) {
+      return Promise.reject(new Error('Сессия истекла — войдите заново'));
+    }
+    if (!error?.response) {
+      return Promise.reject(new Error('Нет соединения с сервером'));
+    }
+    return Promise.reject(error);
+  }
+);
 
 export async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
   const response = await api.get<T>(url, { params });
@@ -64,6 +88,35 @@ export const platformApi = {
   },
   agents: {
     sendMessage: (sessionId: string, body: { content: string; caseTitle?: string; artifacts?: string[] }) =>
-      post<AgentSession>(`/agents/sessions/${sessionId}/messages`, body)
+      post<AgentSession>(`/agents/sessions/${sessionId}/messages`, body),
+    latestSession: (agentId: string, caseId?: string) =>
+      get<AgentSession | null>('/agents/sessions/latest', caseId ? { agentId, caseId } : { agentId })
+  },
+  news: {
+    list: (category?: NewsCategory) => get<NewsPost[]>('/news', category ? { category } : undefined)
+  },
+  profileTraits: {
+    me: () => get<ProfileTraits>('/profile-traits/me'),
+    updateMe: (body: { professionalTags: string[]; interests: string[]; motivations: string[] }) =>
+      put<ProfileTraits>('/profile-traits/me', body)
+  },
+  streak: {
+    me: () => get<Streak>('/streak/me')
+  },
+  events: {
+    listUpcoming: () => get<PlatformEvent[]>('/events')
+  },
+  search: {
+    run: (query: string) => get<SearchResult[]>('/search', { query })
+  },
+  files: {
+    upload: async (file: File): Promise<UploadedFile> => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await api.post<UploadedFile>('/files', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      return response.data;
+    }
   }
 };

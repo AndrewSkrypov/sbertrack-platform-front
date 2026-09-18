@@ -63,6 +63,9 @@ export const sberTrackTheme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          scrollbarGutter: 'stable'
+        },
         '*:focus-visible': {
           outline: `2px solid ${brand.teal}`,
           outlineOffset: 2

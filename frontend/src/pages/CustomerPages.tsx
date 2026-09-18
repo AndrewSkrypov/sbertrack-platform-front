@@ -37,6 +37,7 @@ import {
 } from '../components/AnalyticsCharts';
 import { CompetencyBars } from '../components/CompetencyBars';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
@@ -73,7 +74,7 @@ const defaultWeights: Record<Competency, number> = {
 
 export function CustomerDashboardPage() {
   const navigate = useNavigate();
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [analytics, tracks, cases, submissions, candidates] = await Promise.all([
       platformApi.analytics.customerDashboard(),
       get<Track[]>('/tracks'),
@@ -84,6 +85,7 @@ export function CustomerDashboardPage() {
     return { analytics, tracks, cases, submissions, candidates };
   }, []);
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
@@ -211,7 +213,7 @@ export function TrackCreatePage() {
 export function CaseCreatePage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { data: tracks, loading } = useApi(() => get<Track[]>('/tracks'), []);
+  const { data: tracks, loading, error, reload } = useApi(() => get<Track[]>('/tracks'), []);
   const [trackId, setTrackId] = useState('');
   const [title, setTitle] = useState('');
   const [shortDescription, setShortDescription] = useState('');
@@ -245,6 +247,7 @@ export function CaseCreatePage() {
     navigate('/customer/dashboard');
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !tracks) return <LoadingBlock />;
   return (
     <FormCard title="Создать кейс" subtitle="Практическая задача с артефактами и вкладом в компетенции участника." onSubmit={submit} submitLabel="Создать кейс">
@@ -285,7 +288,7 @@ export function CaseCreatePage() {
 export function SubmissionReviewPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [feedbackText, setFeedbackText] = useState('Решение принято к дальнейшей проработке. Уточните метрики и добавьте артефакты проверки.');
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [submissions, cases] = await Promise.all([get<Submission[]>('/submissions'), get<PracticalCase[]>('/cases')]);
     return { submissions, cases };
   }, []);
@@ -312,6 +315,7 @@ export function SubmissionReviewPage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
@@ -355,7 +359,7 @@ export function CvBookPage() {
   const [caseTag, setCaseTag] = useState('');
   const [organizationName, setOrganizationName] = useState('');
   const [minScore, setMinScore] = useState(0);
-  const { data, loading } = useApi(() => get<CvBookCandidate[]>('/cv-book/candidates', {
+  const { data, loading, error, reload } = useApi(() => get<CvBookCandidate[]>('/cv-book/candidates', {
     competency: competency || undefined,
     priorityOnly: priorityOnly || undefined,
     completedCasesMin: completedCasesMin || undefined,
@@ -395,7 +399,7 @@ export function CvBookPage() {
           </Grid>
         </CardContent>
       </Card>
-      {loading ? <LoadingBlock /> : (
+      {error ? <ErrorState message={error} onRetry={reload} /> : loading ? <LoadingBlock /> : (
         <Grid container spacing={2}>
           {filtered.map((candidate) => (
             <Grid item xs={12} md={6} lg={4} key={candidate.id}>
@@ -426,7 +430,7 @@ export function CvBookPage() {
 export function CandidateProfilePage() {
   const { id } = useParams();
   const [notice, setNotice] = useState<string | null>(null);
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const candidate = await get<CvBookCandidate>(`/cv-book/candidates/${id}`);
     const [portfolio, submissions] = await Promise.all([
       get<Portfolio>(`/portfolio/${candidate.studentId}`),
@@ -459,6 +463,7 @@ export function CandidateProfilePage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const radar = competencyKeys.map((competency) => ({ competency, value: data.candidate.competencyProfile[competency] ?? 0 }));
   const dynamics = data.submissions.map((submission, index) => ({ label: `Кейс ${index + 1}`, value: Math.min(100, 72 + index * 6) }));

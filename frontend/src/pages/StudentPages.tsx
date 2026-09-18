@@ -23,6 +23,7 @@ import {
   CardContent,
   Checkbox,
   Chip,
+  CircularProgress,
   Divider,
   Grid,
   LinearProgress,
@@ -52,6 +53,13 @@ import FlagRoundedIcon from '@mui/icons-material/FlagRounded';
 import ArrowForwardRoundedIcon from '@mui/icons-material/ArrowForwardRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
 import SchemaRoundedIcon from '@mui/icons-material/SchemaRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import FavoriteBorderRoundedIcon from '@mui/icons-material/FavoriteBorderRounded';
+import ChatBubbleOutlineRoundedIcon from '@mui/icons-material/ChatBubbleOutlineRounded';
+import VisibilityRoundedIcon from '@mui/icons-material/VisibilityRounded';
+import SelfImprovementRoundedIcon from '@mui/icons-material/SelfImprovementRounded';
+import UploadFileRoundedIcon from '@mui/icons-material/UploadFileRounded';
+import AttachFileRoundedIcon from '@mui/icons-material/AttachFileRounded';
 import { memo, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { get, platformApi, post, put } from '../api/client';
@@ -67,6 +75,7 @@ import {
 } from '../components/AnalyticsCharts';
 import { CompetencyBars } from '../components/CompetencyBars';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
@@ -77,8 +86,10 @@ import {
   AgentSession,
   Competency,
   Difficulty,
+  NewsCategory,
   Portfolio,
   PracticalCase,
+  ProfileTraits,
   RoadmapStatus,
   StudentRoadmap,
   Submission,
@@ -120,18 +131,20 @@ const competencyKeys = Object.keys(competencyLabels) as Competency[];
 export function StudentDashboardPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { data, loading } = useApi(async () => {
-    const [analytics, tracks, cases, portfolio, submissions, roadmap] = await Promise.all([
+  const { data, loading, error, reload } = useApi(async () => {
+    const [analytics, tracks, cases, portfolio, submissions, roadmap, events] = await Promise.all([
       platformApi.analytics.studentDashboard(),
       get<Track[]>('/tracks'),
       get<PracticalCase[]>('/cases', { status: 'PUBLISHED' }),
       get<Portfolio>('/portfolio/me'),
       get<Submission[]>('/submissions', { studentId: session?.user.id }),
-      platformApi.roadmaps.me()
+      platformApi.roadmaps.me(),
+      platformApi.events.listUpcoming()
     ]);
-    return { analytics, tracks, cases, portfolio, submissions, roadmap };
+    return { analytics, tracks, cases, portfolio, submissions, roadmap, events };
   }, [session?.user.id]);
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const recommendedTrack = data.tracks[0];
   const nearestCase = data.cases.find((item) => item.title === data.analytics.nearestCaseTitle) ?? data.cases[0];
@@ -193,69 +206,167 @@ export function StudentDashboardPage() {
         <MetricGrid metrics={data.analytics.metrics} />
       </Box>
 
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} lg={4}>
-          <PieChartBlock title="Выполненные кейсы по направлениям" data={data.analytics.completedCasesByDirection} />
-        </Grid>
-        <Grid item xs={12} lg={4}>
-          <BarChartBlock title="Рост компетенций по последним кейсам" data={data.analytics.competencyGrowth} />
-        </Grid>
-        <Grid item xs={12} lg={4}>
-          <CompetencyRadarChart data={data.analytics.competencyRadar} />
-        </Grid>
-        <Grid item xs={12} lg={6}>
-          <LineChartBlock title="Динамика качества решений" data={data.analytics.qualityDynamics} />
-        </Grid>
-        <Grid item xs={12} lg={6}>
-          <FunnelBlock title="Мини-воронка прогресса" data={data.analytics.funnel} />
-        </Grid>
-      </Grid>
-
       <Grid container spacing={3}>
         <Grid item xs={12} lg={7}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h5" sx={{ mb: 3 }}>Рекомендация следующего шага</Typography>
-              <Typography variant="h6" sx={{ mb: 2 }}>{nearestCase?.title}</Typography>
-              <Typography color="text.secondary" sx={{ mb: 3 }}>{data.analytics.recommendation}</Typography>
-              {nearestCase && topCompetencies(nearestCase.competencyWeights).length > 0 && (
-                <Box sx={{ mb: 3 }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Развиваемые компетенции</Typography>
-                  <Stack direction="row" spacing={1}>
-                    {topCompetencies(nearestCase.competencyWeights).map((competency) => (
-                      <Chip key={competency} label={competencyLabels[competency]} size="small" />
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-              <Stack direction="row" spacing={2}>
-                <Button variant="contained" onClick={() => nearestCase && navigate(`/student/cases/${nearestCase.id}`)}>
-                  Перейти к кейсу
-                </Button>
-                <Button variant="outlined" onClick={() => navigate('/student/trajectories')}>
-                  Выбрать траекторию
-                </Button>
-              </Stack>
-            </CardContent>
-          </Card>
+          <Stack spacing={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h5" sx={{ mb: 3 }}>Рекомендация следующего шага</Typography>
+                <Typography variant="h6" sx={{ mb: 2 }}>{nearestCase?.title}</Typography>
+                <Typography color="text.secondary" sx={{ mb: 3 }}>{data.analytics.recommendation}</Typography>
+                {nearestCase && topCompetencies(nearestCase.competencyWeights).length > 0 && (
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>Развиваемые компетенции</Typography>
+                    <Stack direction="row" spacing={1}>
+                      {topCompetencies(nearestCase.competencyWeights).map((competency) => (
+                        <Chip key={competency} label={competencyLabels[competency]} size="small" />
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
+                <Stack direction="row" spacing={2}>
+                  <Button variant="contained" onClick={() => nearestCase && navigate(`/student/cases/${nearestCase.id}`)}>
+                    Перейти к кейсу
+                  </Button>
+                  <Button variant="outlined" onClick={() => navigate('/student/trajectories')}>
+                    Выбрать траекторию
+                  </Button>
+                </Stack>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                  <Typography variant="h6">Продолжить обучение</Typography>
+                  <Button size="small" onClick={() => navigate('/student/tracks')}>Все курсы →</Button>
+                </Stack>
+                <Stack spacing={1.5}>
+                  {data.tracks.slice(0, 3).map((track) => (
+                    <Paper
+                      key={track.id}
+                      variant="outlined"
+                      sx={{ p: 2, cursor: 'pointer', transition: 'border-color 150ms ease', '&:hover': { borderColor: 'primary.main' } }}
+                      onClick={() => navigate(`/student/tracks/${track.id}`)}
+                    >
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography fontWeight={600} noWrap>{track.title}</Typography>
+                          <Typography variant="body2" color="text.secondary" noWrap>{track.customerName} · {difficultyLabels[track.difficulty]}</Typography>
+                        </Box>
+                        <ArrowForwardRoundedIcon fontSize="small" sx={{ color: 'text.disabled', flexShrink: 0 }} />
+                      </Stack>
+                    </Paper>
+                  ))}
+                  {data.tracks.length === 0 && <Typography color="text.secondary">Пока нет доступных треков.</Typography>}
+                </Stack>
+              </CardContent>
+            </Card>
+          </Stack>
         </Grid>
         <Grid item xs={12} lg={5}>
-          <Card sx={{ height: '100%' }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>Последняя обратная связь</Typography>
-              {data.portfolio.feedbackHighlights.length ? (
-                data.portfolio.feedbackHighlights.slice(0, 3).map((text) => <Alert key={text} severity="success" sx={{ mb: 1 }}>{text}</Alert>)
-              ) : (
-                <Typography color="text.secondary">Обратная связь появится после проверки решения.</Typography>
-              )}
-              {latestSubmission && (
-                <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-                  <Typography variant="body2" color="text.secondary">Статус последнего решения</Typography>
-                  <Typography variant="body1" fontWeight={600}>{submissionStatusLabels[latestSubmission.status]}</Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
+          <Stack spacing={3}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2 }}>Последняя обратная связь</Typography>
+                {data.portfolio.feedbackHighlights.length ? (
+                  data.portfolio.feedbackHighlights.slice(0, 3).map((text) => <Alert key={text} severity="success" sx={{ mb: 1 }}>{text}</Alert>)
+                ) : (
+                  <Typography color="text.secondary">Обратная связь появится после проверки решения.</Typography>
+                )}
+                {latestSubmission && (
+                  <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                    <Typography variant="body2" color="text.secondary">Статус последнего решения</Typography>
+                    <Typography variant="body1" fontWeight={600}>{submissionStatusLabels[latestSubmission.status]}</Typography>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardContent>
+                <Typography variant="h6" sx={{ mb: 2 }}>Ближайшие события</Typography>
+                {data.events.length ? (
+                  <Stack spacing={0}>
+                    {data.events.map((event, index) => {
+                      const date = new Date(event.startsAt);
+                      return (
+                        <Stack
+                          key={event.id}
+                          direction="row"
+                          spacing={1.5}
+                          sx={{
+                            py: 1.5,
+                            borderBottom: index < data.events.length - 1 ? 1 : 0,
+                            borderColor: 'divider'
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              borderRadius: 1.5,
+                              bgcolor: 'background.default',
+                              color: brand.forest,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}
+                          >
+                            <Typography sx={{ fontFamily: 'Manrope, sans-serif', fontWeight: 800, fontSize: 15, lineHeight: 1 }}>
+                              {date.toLocaleDateString('ru-RU', { day: 'numeric' })}
+                            </Typography>
+                            <Typography sx={{ fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' }}>
+                              {date.toLocaleDateString('ru-RU', { month: 'short' })}
+                            </Typography>
+                          </Box>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="body2" fontWeight={600}>{event.title}</Typography>
+                            <Typography variant="caption" color="text.disabled">{event.location}</Typography>
+                          </Box>
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                ) : (
+                  <Typography color="text.secondary">Пока нет запланированных событий.</Typography>
+                )}
+              </CardContent>
+            </Card>
+          </Stack>
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}
+
+export function StudentAnalyticsPage() {
+  const { session } = useAuth();
+  const { data, loading, error, reload } = useApi(() => platformApi.analytics.studentDashboard(), [session?.user.id]);
+
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (loading || !data) return <LoadingBlock />;
+
+  return (
+    <Box>
+      <PageHeader title="Аналитика развития" subtitle="Компетенции, качество решений и прогресс по трекам" />
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} lg={4}>
+          <PieChartBlock title="Выполненные кейсы по направлениям" data={data.completedCasesByDirection} />
+        </Grid>
+        <Grid item xs={12} lg={4}>
+          <BarChartBlock title="Рост компетенций по последним кейсам" data={data.competencyGrowth} />
+        </Grid>
+        <Grid item xs={12} lg={4}>
+          <CompetencyRadarChart data={data.competencyRadar} />
+        </Grid>
+        <Grid item xs={12} lg={6}>
+          <LineChartBlock title="Динамика качества решений" data={data.qualityDynamics} />
+        </Grid>
+        <Grid item xs={12} lg={6}>
+          <FunnelBlock title="Мини-воронка прогресса" data={data.funnel} />
         </Grid>
       </Grid>
     </Box>
@@ -268,7 +379,7 @@ export function TrackCatalogPage() {
   const [audience, setAudience] = useState('');
   const [competency, setCompetency] = useState<Competency | ''>('');
   const [customer, setCustomer] = useState('');
-  const { data, loading } = useApi(() => get<Track[]>('/tracks', {
+  const { data, loading, error, reload } = useApi(() => get<Track[]>('/tracks', {
     difficulty: difficulty || undefined,
     targetAudience: audience || undefined,
     competency: competency || undefined,
@@ -298,7 +409,7 @@ export function TrackCatalogPage() {
           </Grid>
         </CardContent>
       </Card>
-      {loading || !data ? <LoadingBlock /> : (
+      {error ? <ErrorState message={error} onRetry={reload} /> : loading || !data ? <LoadingBlock /> : (
         <Grid container spacing={3}>
           {data.map((track) => (
             <Grid item xs={12} md={6} lg={4} key={track.id}>
@@ -339,7 +450,7 @@ export function TrackCatalogPage() {
 export function TrackDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [track, cases] = await Promise.all([
       get<Track>(`/tracks/${id}`),
       get<PracticalCase[]>('/cases', { trackId: id })
@@ -347,9 +458,17 @@ export function TrackDetailsPage() {
     return { track, cases };
   }, [id]);
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
+      <Button
+        startIcon={<ArrowBackRoundedIcon />}
+        onClick={() => navigate('/student/tracks')}
+        sx={{ mb: 2 }}
+      >
+        К списку треков
+      </Button>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" sx={{ mb: 1 }}>{data.track.title}</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>{data.track.description}</Typography>
@@ -375,10 +494,18 @@ export function TrackDetailsPage() {
 export function CaseDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: item, loading } = useApi(() => get<PracticalCase>(`/cases/${id}`), [id]);
+  const { data: item, loading, error, reload } = useApi(() => get<PracticalCase>(`/cases/${id}`), [id]);
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !item) return <LoadingBlock />;
   return (
     <Box>
+      <Button
+        startIcon={<ArrowBackRoundedIcon />}
+        onClick={() => navigate(-1)}
+        sx={{ mb: 2 }}
+      >
+        Назад
+      </Button>
       <PageHeader
         title={item.title}
         subtitle={item.shortDescription}
@@ -447,11 +574,33 @@ export function StudentWorkspacePage() {
   const { session } = useAuth();
   const [solution, setSolution] = useState('');
   const [artifactUrl, setArtifactUrl] = useState('');
+  const [artifactFileName, setArtifactFileName] = useState('');
+  const [uploadingArtifact, setUploadingArtifact] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [selectedArtifacts, setSelectedArtifacts] = useState<string[]>(['Описание решения']);
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [message, setMessage] = useState('');
   const [agentSession, setAgentSession] = useState<AgentSession | null>(null);
-  const { data, loading } = useApi(async () => {
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState('');
+
+  async function handleArtifactUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setUploadingArtifact(true);
+    setUploadError(null);
+    try {
+      const uploaded = await platformApi.files.upload(file);
+      setArtifactUrl(uploaded.url);
+      setArtifactFileName(uploaded.fileName);
+    } catch (uploadException) {
+      setUploadError(uploadException instanceof Error ? uploadException.message : 'Не удалось загрузить файл');
+    } finally {
+      setUploadingArtifact(false);
+    }
+  }
+  const { data, loading, error, reload } = useApi(async () => {
     const [item, agents] = await Promise.all([
       get<PracticalCase>(`/cases/${caseId}`),
       get<AgentDefinition[]>('/agents')
@@ -459,6 +608,12 @@ export function StudentWorkspacePage() {
     return { item, agents };
   }, [caseId]);
   const mentor = data?.agents[0];
+
+  useEffect(() => {
+    if (!mentor) return;
+    setAgentSession(null);
+    platformApi.agents.latestSession(mentor.id, caseId).then(setAgentSession).catch(() => setAgentSession(null));
+  }, [mentor?.id, caseId]);
 
   async function ensureSubmission(): Promise<Submission> {
     if (submission) return submission;
@@ -498,22 +653,30 @@ export function StudentWorkspacePage() {
   }
 
   async function sendAgentMessage() {
-    if (!message.trim() || !mentor || !data) return;
-    const currentSession = agentSession ?? await post<AgentSession>('/agents/sessions', {
-      studentId: session?.user.id,
-      caseId,
-      agentId: mentor.id
-    });
-    const artifacts = artifactUrl ? [...selectedArtifacts, artifactUrl] : selectedArtifacts;
-    const nextSession = await platformApi.agents.sendMessage(currentSession.id, {
-      content: message,
-      caseTitle: data.item.title,
-      artifacts
-    });
-    setAgentSession(nextSession);
+    if (!message.trim() || !mentor || !data || sendingMessage) return;
+    const content = message;
     setMessage('');
+    setPendingMessage(content);
+    setSendingMessage(true);
+    try {
+      const currentSession = agentSession ?? await post<AgentSession>('/agents/sessions', {
+        studentId: session?.user.id,
+        caseId,
+        agentId: mentor.id
+      });
+      const artifacts = artifactUrl ? [...selectedArtifacts, artifactUrl] : selectedArtifacts;
+      const nextSession = await platformApi.agents.sendMessage(currentSession.id, {
+        content,
+        caseTitle: data.item.title,
+        artifacts
+      });
+      setAgentSession(nextSession);
+    } finally {
+      setSendingMessage(false);
+    }
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data || !mentor) return <LoadingBlock />;
   return (
     <Box>
@@ -533,7 +696,23 @@ export function StudentWorkspacePage() {
             <CardContent>
               <Stack spacing={2}>
                 <TextField label="Заметки и решение" value={solution} onChange={(event) => setSolution(event.target.value)} multiline minRows={9} fullWidth />
-                <TextField label="Ссылка на артефакт" value={artifactUrl} onChange={(event) => setArtifactUrl(event.target.value)} fullWidth />
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Button
+                      component="label"
+                      variant="outlined"
+                      startIcon={uploadingArtifact ? <CircularProgress size={16} /> : <UploadFileRoundedIcon />}
+                      disabled={uploadingArtifact}
+                    >
+                      {uploadingArtifact ? 'Загрузка…' : 'Прикрепить файл'}
+                      <input type="file" hidden onChange={handleArtifactUpload} />
+                    </Button>
+                    {artifactFileName && (
+                      <Chip icon={<AttachFileRoundedIcon />} label={artifactFileName} size="small" onDelete={() => { setArtifactUrl(''); setArtifactFileName(''); }} />
+                    )}
+                  </Stack>
+                  {uploadError && <Alert severity="error" onClose={() => setUploadError(null)}>{uploadError}</Alert>}
+                </Stack>
                 <TextField
                   select
                   label="Наработки"
@@ -567,6 +746,8 @@ export function StudentWorkspacePage() {
             message={message}
             onMessage={setMessage}
             onSend={sendAgentMessage}
+            sending={sendingMessage}
+            pendingMessage={pendingMessage}
           />
         </Grid>
       </Grid>
@@ -578,7 +759,7 @@ export function StudentTrajectoryTreePage() {
   const theme = useTheme();
   const [trajectoryId, setTrajectoryId] = useState<string>('');
   const [selectedNode, setSelectedNode] = useState<TrajectoryNode | null>(null);
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const trajectories = await platformApi.trajectories.list();
     const id = trajectoryId || trajectories[0]?.id;
     const nodes = id ? await platformApi.trajectories.nodes(id) : [];
@@ -591,6 +772,7 @@ export function StudentTrajectoryTreePage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data || !activeTrajectory) return <LoadingBlock />;
 
   return (
@@ -868,7 +1050,7 @@ const trajectoryNodeTypes = {
 
 export function StudentRoadmapPage() {
   const navigate = useNavigate();
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [roadmap, cases] = await Promise.all([
       platformApi.roadmaps.me(),
       get<PracticalCase[]>('/cases')
@@ -886,6 +1068,7 @@ export function StudentRoadmapPage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const casesById = new Map(data.cases.map((item) => [item.id, item]));
   const steps = data.roadmap.steps;
@@ -969,10 +1152,12 @@ export function AgentSandboxPage() {
   const [selected, setSelected] = useState(0);
   const [text, setText] = useState('Помоги структурировать решение кейса');
   const [agentSession, setAgentSession] = useState<AgentSession | null>(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState('');
   const [caseId, setCaseId] = useState('');
   const [artifacts, setArtifacts] = useState<string[]>(['Описание решения']);
   const [artifactLink, setArtifactLink] = useState('');
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [agents, cases] = await Promise.all([
       get<AgentDefinition[]>('/agents'),
       get<PracticalCase[]>('/cases', { status: 'PUBLISHED' })
@@ -982,22 +1167,36 @@ export function AgentSandboxPage() {
   const agent = data?.agents[selected];
   const selectedCase = data?.cases.find((item) => item.id === caseId) ?? data?.cases[0];
 
+  useEffect(() => {
+    if (!agent || !selectedCase) return;
+    setAgentSession(null);
+    platformApi.agents.latestSession(agent.id, selectedCase.id).then(setAgentSession).catch(() => setAgentSession(null));
+  }, [agent?.id, selectedCase?.id]);
+
   async function send() {
-    if (!agent || !text.trim() || !selectedCase) return;
-    const currentSession = agentSession ?? await post<AgentSession>('/agents/sessions', {
-      studentId: session?.user.id,
-      caseId: selectedCase.id,
-      agentId: agent.id
-    });
-    const next = await platformApi.agents.sendMessage(currentSession.id, {
-      content: text,
-      caseTitle: selectedCase.title,
-      artifacts: artifactLink ? [...artifacts, artifactLink] : artifacts
-    });
-    setAgentSession(next);
+    if (!agent || !text.trim() || !selectedCase || sendingMessage) return;
+    const content = text;
     setText('');
+    setPendingMessage(content);
+    setSendingMessage(true);
+    try {
+      const currentSession = agentSession ?? await post<AgentSession>('/agents/sessions', {
+        studentId: session?.user.id,
+        caseId: selectedCase.id,
+        agentId: agent.id
+      });
+      const next = await platformApi.agents.sendMessage(currentSession.id, {
+        content,
+        caseTitle: selectedCase.title,
+        artifacts: artifactLink ? [...artifacts, artifactLink] : artifacts
+      });
+      setAgentSession(next);
+    } finally {
+      setSendingMessage(false);
+    }
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data || !agent || !selectedCase) return <LoadingBlock />;
   return (
     <Box>
@@ -1057,6 +1256,8 @@ export function AgentSandboxPage() {
             message={text}
             onMessage={setText}
             onSend={send}
+            sending={sendingMessage}
+            pendingMessage={pendingMessage}
           />
         </Grid>
       </Grid>
@@ -1066,7 +1267,7 @@ export function AgentSandboxPage() {
 
 export function PortfolioPage() {
   const { session } = useAuth();
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [portfolio, submissions, cases] = await Promise.all([
       get<Portfolio>('/portfolio/me'),
       get<Submission[]>('/submissions'),
@@ -1074,6 +1275,7 @@ export function PortfolioPage() {
     ]);
     return { portfolio, submissions, cases };
   }, []);
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const radar = competencyKeys.map((competency) => ({ competency, value: data.portfolio.competencyProfile[competency] ?? 0 }));
   const topCompetency = [...radar].sort((a, b) => b.value - a.value)[0];
@@ -1205,19 +1407,90 @@ const reflectionQuestions: { key: string; hint: string }[] = [
 
 export function ReflectionPage() {
   const { submissionId } = useParams();
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const { data: submissions, loading, error, reload } = useApi(
+    () => get<Submission[]>('/submissions', { studentId: session?.user.id }),
+    [session?.user.id]
+  );
+
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (loading || !submissions) return <LoadingBlock />;
+  if (!submissionId) {
+    return <ReflectionCasePicker submissions={submissions} />;
+  }
+  const submission = submissions.find((item) => item.id === submissionId);
+  return <ReflectionEditor submission={submission} onBack={() => navigate('/student/reflection')} />;
+}
+
+function ReflectionCasePicker({ submissions }: { submissions: Submission[] }) {
+  const navigate = useNavigate();
+  const pending = submissions.filter((item) => !item.reflectionId);
+  const done = submissions.filter((item) => item.reflectionId);
+
+  return (
+    <Box>
+      <PageHeader title="Рефлексия" subtitle="Фиксация вклада, работы с наставником и следующей итерации" />
+
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Ждут рефлексии</Typography>
+      {pending.length === 0 ? (
+        <EmptyState title="Все рефлексии заполнены" description="Как только появится новое принятое решение, оно попадёт сюда." />
+      ) : (
+        <Stack spacing={1.5} sx={{ mb: 4 }}>
+          {pending.map((submission) => (
+            <Paper
+              key={submission.id}
+              variant="outlined"
+              sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer', transition: 'border-color 150ms ease', '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' } }}
+              onClick={() => navigate(`/student/reflection/${submission.id}`)}
+            >
+              <Box sx={{ width: 38, height: 38, borderRadius: 1.5, bgcolor: 'background.default', color: brand.forest, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <SelfImprovementRoundedIcon fontSize="small" />
+              </Box>
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Typography fontWeight={700} noWrap>{submission.title}</Typography>
+                <Typography variant="caption" color="text.disabled">{submissionStatusLabels[submission.status]}</Typography>
+              </Box>
+              <ArrowForwardRoundedIcon fontSize="small" sx={{ color: 'text.disabled', flexShrink: 0 }} />
+            </Paper>
+          ))}
+        </Stack>
+      )}
+
+      <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Заполненные</Typography>
+      {done.length === 0 ? (
+        <Typography color="text.secondary">Заполненных рефлексий пока нет.</Typography>
+      ) : (
+        <Stack spacing={1.5}>
+          {done.map((submission) => (
+            <Paper
+              key={submission.id}
+              variant="outlined"
+              sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, cursor: 'pointer' }}
+              onClick={() => navigate(`/student/reflection/${submission.id}`)}
+            >
+              <CheckRoundedIcon fontSize="small" sx={{ color: 'success.main', flexShrink: 0 }} />
+              <Typography sx={{ flexGrow: 1 }} noWrap>{submission.title}</Typography>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
+function ReflectionEditor({ submission, onBack }: { submission?: Submission; onBack: () => void }) {
   const { session } = useAuth();
   const [answers, setAnswers] = useState<Record<string, string>>(
     Object.fromEntries(reflectionQuestions.map((q) => [q.key, '']))
   );
   const [summary, setSummary] = useState('');
   const [saved, setSaved] = useState(false);
-  const { data: submissions } = useApi(() => get<Submission[]>('/submissions', { studentId: session?.user.id }), [session?.user.id]);
-  const effectiveSubmissionId = submissionId ?? submissions?.[0]?.id;
   const filledCount = reflectionQuestions.filter((q) => answers[q.key].trim()).length;
 
   async function submitReflection() {
-    if (!effectiveSubmissionId) return;
-    await post('/reflections', { submissionId: effectiveSubmissionId, studentId: session?.user.id, answers, summary });
+    if (!submission) return;
+    await post('/reflections', { submissionId: submission.id, studentId: session?.user.id, answers, summary });
     setSaved(true);
   }
 
@@ -1225,10 +1498,14 @@ export function ReflectionPage() {
 
   return (
     <Box>
+      <Button startIcon={<ArrowForwardRoundedIcon sx={{ transform: 'rotate(180deg)' }} />} onClick={onBack} sx={{ mb: 2 }}>
+        К списку кейсов
+      </Button>
+
       <Box sx={{ mb: 4 }}>
         <Typography variant="h3" sx={{ mb: 1 }}>Рефлексия по кейсу</Typography>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Итоговая фиксация собственного вклада, работы с ИИ и следующей итерации
+          {submission?.title ?? 'Итоговая фиксация собственного вклада, работы с ИИ и следующей итерации'}
         </Typography>
         <Stack direction="row" spacing={3} alignItems="center">
           <Box>
@@ -1244,7 +1521,7 @@ export function ReflectionPage() {
       </Box>
 
       {saved && <Alert severity="success" sx={{ mb: 3 }}>Рефлексия сохранена</Alert>}
-      {!effectiveSubmissionId && <Alert severity="info" sx={{ mb: 3 }}>Сначала отправьте решение, чтобы связать рефлексию с кейсом.</Alert>}
+      {!submission && <Alert severity="info" sx={{ mb: 3 }}>Кейс не найден — выберите его из списка.</Alert>}
 
       <Grid container spacing={3}>
         <Grid item xs={12} lg={8}>
@@ -1313,7 +1590,7 @@ export function ReflectionPage() {
                     value={(filledCount / reflectionQuestions.length) * 100}
                     sx={{ height: 6, borderRadius: 3 }}
                   />
-                  <Button variant="contained" size="large" onClick={submitReflection} disabled={!effectiveSubmissionId}>
+                  <Button variant="contained" size="large" onClick={submitReflection} disabled={!submission}>
                     Сохранить рефлексию
                   </Button>
                 </Stack>
@@ -1322,6 +1599,433 @@ export function ReflectionPage() {
           </Stack>
         </Grid>
       </Grid>
+    </Box>
+  );
+}
+
+const newsCategoryLabels: Record<NewsCategory, string> = {
+  TRACK: 'Трек',
+  EVENT: 'Мероприятие',
+  PRODUCT: 'Продукт'
+};
+
+function formatNewsDate(iso: string) {
+  const date = new Date(iso);
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }) + ', ' +
+    date.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatCount(value: number) {
+  if (value >= 1000) return `${(value / 1000).toFixed(1).replace('.0', '')} тыс.`;
+  return String(value);
+}
+
+export function StudentNewsPage() {
+  const [category, setCategory] = useState<NewsCategory | 'ALL'>('ALL');
+  const { data: posts, loading, error, reload } = useApi(
+    () => platformApi.news.list(category === 'ALL' ? undefined : category),
+    [category]
+  );
+
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (loading || !posts) return <LoadingBlock />;
+
+  return (
+    <Box>
+      <PageHeader title="Новости платформы" subtitle="Обновления треков, анонсы мероприятий и результаты когорт" />
+
+      <Stack direction="row" spacing={1} sx={{ mb: 3 }}>
+        {(['ALL', 'TRACK', 'EVENT', 'PRODUCT'] as const).map((value) => (
+          <Chip
+            key={value}
+            label={value === 'ALL' ? 'Все' : newsCategoryLabels[value]}
+            onClick={() => setCategory(value)}
+            color={category === value ? 'primary' : 'default'}
+            variant={category === value ? 'filled' : 'outlined'}
+          />
+        ))}
+      </Stack>
+
+      {posts.length === 0 ? (
+        <EmptyState title="Пока нет новостей" description="Загляните позже — здесь появятся обновления платформы." />
+      ) : (
+        <Stack spacing={2.5}>
+          {posts.map((post) => (
+            <Card key={post.id}>
+              <CardContent>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
+                  <Box
+                    sx={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 1.5,
+                      display: 'grid',
+                      placeItems: 'center',
+                      flexShrink: 0,
+                      fontWeight: 800,
+                      fontFamily: 'Manrope, sans-serif',
+                      fontSize: 13,
+                      color: '#fff',
+                      background: `linear-gradient(135deg, ${brand.forest}, ${brand.teal})`
+                    }}
+                  >
+                    {post.authorInitial}
+                  </Box>
+                  <Box sx={{ minWidth: 0, flexGrow: 1 }}>
+                    <Typography fontWeight={700} noWrap>{post.authorName}</Typography>
+                    <Typography variant="caption" color="text.disabled">{formatNewsDate(post.publishedAt)}</Typography>
+                  </Box>
+                  {post.pinned && <Chip label="Важное" size="small" color="warning" />}
+                </Stack>
+
+                <Chip
+                  label={newsCategoryLabels[post.category]}
+                  size="small"
+                  sx={{ mb: 1.5, bgcolor: alpha(brand.teal, 0.12), color: brand.forest, fontWeight: 700, fontSize: 10.5 }}
+                />
+                <Typography variant="h6" sx={{ mb: 1 }}>{post.title}</Typography>
+                <Typography color="text.secondary" sx={{ mb: post.imageLabels.length ? 2 : 2.5 }}>{post.body}</Typography>
+
+                {post.imageLabels.length > 0 && (
+                  <Grid container spacing={1} sx={{ mb: 2.5 }}>
+                    {post.imageLabels.map((label, index) => (
+                      <Grid item xs={12 / Math.min(post.imageLabels.length, 3)} key={label}>
+                        <Box
+                          sx={{
+                            aspectRatio: '4 / 3',
+                            borderRadius: 2,
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                            p: 1.5,
+                            color: '#fff',
+                            fontFamily: 'Manrope, sans-serif',
+                            fontWeight: 800,
+                            fontSize: 13,
+                            lineHeight: 1.25,
+                            background: index % 2 === 0
+                              ? `linear-gradient(160deg, ${brand.ink}, ${brand.teal})`
+                              : `linear-gradient(160deg, #111, ${brand.lime})`
+                          }}
+                        >
+                          {label}
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                )}
+
+                <Stack direction="row" spacing={3} sx={{ color: 'text.disabled' }}>
+                  <Stack direction="row" spacing={0.75} alignItems="center">
+                    <FavoriteBorderRoundedIcon sx={{ fontSize: 17 }} />
+                    <Typography variant="body2">{post.likes}</Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={0.75} alignItems="center">
+                    <ChatBubbleOutlineRoundedIcon sx={{ fontSize: 17 }} />
+                    <Typography variant="body2">{post.comments}</Typography>
+                  </Stack>
+                  <Stack direction="row" spacing={0.75} alignItems="center">
+                    <VisibilityRoundedIcon sx={{ fontSize: 17 }} />
+                    <Typography variant="body2">{formatCount(post.views)}</Typography>
+                  </Stack>
+                </Stack>
+              </CardContent>
+            </Card>
+          ))}
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
+function EditableTagsCard({
+  title,
+  tags,
+  onChange
+}: {
+  title: string;
+  tags: string[];
+  onChange: (next: string[]) => void;
+}) {
+  const [draft, setDraft] = useState('');
+
+  function addTag() {
+    const value = draft.trim();
+    if (value && !tags.includes(value)) {
+      onChange([...tags, value]);
+    }
+    setDraft('');
+  }
+
+  return (
+    <Card sx={{ height: '100%' }}>
+      <CardContent>
+        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>{title}</Typography>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1.5 }}>
+          {tags.map((tag) => (
+            <Chip key={tag} label={tag} size="small" onDelete={() => onChange(tags.filter((item) => item !== tag))} />
+          ))}
+        </Stack>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Добавить и нажать Enter"
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault();
+              addTag();
+            }
+          }}
+          onBlur={addTag}
+        />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function StudentProfilePage() {
+  const { session } = useAuth();
+  const { data, loading, error, reload } = useApi(async () => {
+    const [portfolio, submissions, traits] = await Promise.all([
+      get<Portfolio>('/portfolio/me'),
+      get<Submission[]>('/submissions', { studentId: session?.user.id }),
+      platformApi.profileTraits.me()
+    ]);
+    return { portfolio, submissions, traits };
+  }, [session?.user.id]);
+
+  if (error) return <ErrorState message={error} onRetry={reload} />;
+  if (loading || !data || !session) return <LoadingBlock />;
+  const traits = data.traits;
+  const completion = traits.psychotypeCompleted ? 100 : 75;
+
+  async function saveTraits(patch: Partial<Pick<ProfileTraits, 'professionalTags' | 'interests' | 'motivations'>>) {
+    await platformApi.profileTraits.updateMe({
+      professionalTags: patch.professionalTags ?? traits.professionalTags,
+      interests: patch.interests ?? traits.interests,
+      motivations: patch.motivations ?? traits.motivations
+    });
+    await reload();
+  }
+
+  const timelineEvents = [
+    { date: session.user.createdAt, title: 'Регистрация на платформе', subtitle: session.user.email },
+    ...data.submissions
+      .filter((item) => item.submittedAt)
+      .map((item) => ({
+        date: item.submittedAt as string,
+        title: item.status === 'ACCEPTED' ? `Решение принято: ${item.title}` : `Решение отправлено: ${item.title}`,
+        subtitle: submissionStatusLabels[item.status]
+      }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return (
+    <Box>
+      <Card sx={{ mb: 3 }}>
+        <CardContent>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems={{ sm: 'center' }}>
+            <Box
+              sx={{
+                width: 88,
+                height: 88,
+                borderRadius: 3,
+                display: 'grid',
+                placeItems: 'center',
+                flexShrink: 0,
+                color: '#fff',
+                fontFamily: 'Manrope, sans-serif',
+                fontWeight: 800,
+                fontSize: 30,
+                background: `linear-gradient(135deg, ${brand.forest} 0%, ${brand.teal} 60%, ${brand.lime} 100%)`
+              }}
+            >
+              {session.user.fullName[0]}
+            </Box>
+            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+              <Typography variant="h5" sx={{ mb: 0.5 }}>{session.user.fullName}</Typography>
+              <Typography color="text.secondary" sx={{ mb: 1.5 }}>Студент · {data.portfolio.summary}</Typography>
+              <Stack direction="row" spacing={3} flexWrap="wrap">
+                <Typography variant="body2" color="text.secondary">
+                  Email: <Typography component="span" fontWeight={600} color="text.primary">{session.user.email}</Typography>
+                </Typography>
+              </Stack>
+            </Box>
+            <Stack alignItems="center" spacing={0.5} sx={{ flexShrink: 0 }}>
+              <Box sx={{ position: 'relative', width: 62, height: 62 }}>
+                <svg width="62" height="62" viewBox="0 0 62 62">
+                  <circle cx="31" cy="31" r="26" fill="none" stroke={alpha(brand.stone2, 0.16)} strokeWidth="7" />
+                  <circle
+                    cx="31" cy="31" r="26" fill="none" stroke={brand.blue} strokeWidth="7" strokeLinecap="round"
+                    strokeDasharray={163.4}
+                    strokeDashoffset={163.4 * (1 - completion / 100)}
+                    transform="rotate(-90 31 31)"
+                  />
+                  <text x="31" y="36" textAnchor="middle" fontFamily="Manrope, sans-serif" fontWeight={800} fontSize={15}>{completion}%</text>
+                </svg>
+              </Box>
+              <Typography variant="caption" color="text.secondary" textAlign="center">Заполненность<br />профиля</Typography>
+            </Stack>
+          </Stack>
+        </CardContent>
+      </Card>
+
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6}>
+          <EditableTagsCard
+            title="Профтеги"
+            tags={traits.professionalTags}
+            onChange={(next) => saveTraits({ professionalTags: next })}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <EditableTagsCard
+            title="Интересы"
+            tags={traits.interests}
+            onChange={(next) => saveTraits({ interests: next })}
+          />
+        </Grid>
+      </Grid>
+
+      <Typography variant="h6" sx={{ mb: 2 }}>Опыт и достижения</Typography>
+      <Grid container spacing={3} sx={{ mb: 5 }}>
+        <Grid item xs={12} lg={7}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Завершённые кейсы</Typography>
+              {data.portfolio.completedCases.length ? (
+                <Stack spacing={1.5}>
+                  {data.portfolio.completedCases.map((title) => (
+                    <Stack key={title} direction="row" spacing={1.5} alignItems="flex-start">
+                      <CheckRoundedIcon fontSize="small" sx={{ color: 'success.main', mt: 0.25 }} />
+                      <Typography>{title}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography color="text.secondary">Пока нет завершённых кейсов.</Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} lg={5}>
+          <Card sx={{ height: '100%' }}>
+            <CardContent>
+              <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 2 }}>Достижения</Typography>
+              {data.portfolio.feedbackHighlights.length ? (
+                <Stack spacing={1.5}>
+                  {data.portfolio.feedbackHighlights.slice(0, 3).map((text) => (
+                    <Stack key={text} direction="row" spacing={1.5} alignItems="flex-start">
+                      <WorkspacePremiumRoundedIcon fontSize="small" sx={{ color: 'warning.main', mt: 0.25 }} />
+                      <Typography variant="body2">{text}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+              ) : (
+                <Typography color="text.secondary">Достижения появятся после первых решений.</Typography>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      <Typography variant="h6" sx={{ mb: 2 }}>Хронология</Typography>
+      <Card sx={{ mb: 5 }}>
+        <CardContent>
+          {timelineEvents.length ? (
+            <Stack spacing={0}>
+              {timelineEvents.map((event, index) => (
+                <Stack key={`${event.date}-${index}`} direction="row" spacing={2}>
+                  <Stack alignItems="center" sx={{ flexShrink: 0 }}>
+                    <Box sx={{ width: 10, height: 10, borderRadius: '50%', bgcolor: brand.teal, mt: 0.6 }} />
+                    {index < timelineEvents.length - 1 && (
+                      <Box sx={{ width: 2, flexGrow: 1, bgcolor: 'divider', my: 0.5 }} />
+                    )}
+                  </Stack>
+                  <Box sx={{ pb: index < timelineEvents.length - 1 ? 2.5 : 0, minWidth: 0 }}>
+                    <Typography variant="caption" color="text.disabled" fontWeight={600}>
+                      {new Date(event.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </Typography>
+                    <Typography fontWeight={700}>{event.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">{event.subtitle}</Typography>
+                  </Box>
+                </Stack>
+              ))}
+            </Stack>
+          ) : (
+            <Typography color="text.secondary">История появится после первых действий на платформе.</Typography>
+          )}
+        </CardContent>
+      </Card>
+
+      <Typography variant="h6" sx={{ mb: 2 }}>Образование</Typography>
+      <Card sx={{ mb: 5 }}>
+        <CardContent>
+          <Typography color="text.secondary">Раздел образования пока не заполнен. Добавьте сведения об обучении в настройках профиля.</Typography>
+        </CardContent>
+      </Card>
+
+      <Typography variant="h6" sx={{ mb: 2 }}>Характеристики</Typography>
+      <Stack spacing={2.5}>
+        <Card>
+          <CardContent>
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Box sx={{ width: 52, height: 52, borderRadius: 2, bgcolor: 'background.default', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <SelfImprovementRoundedIcon sx={{ color: brand.forest }} />
+              </Box>
+              <Box sx={{ flexGrow: 1 }}>
+                <Typography fontWeight={700}>Базовый психотип</Typography>
+                <Typography variant="body2" color="text.secondary">Пройдите тесты и опросы, чтобы точнее увидеть свои сильные стороны и получить рекомендации по развитию.</Typography>
+              </Box>
+              <Button variant="outlined" sx={{ flexShrink: 0 }}>Пройти тест</Button>
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <EditableTagsCard
+          title="Мотивация"
+          tags={traits.motivations}
+          onChange={(next) => saveTraits({ motivations: next })}
+        />
+
+        <Card>
+          <CardContent>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" fontWeight={700}>Способности</Typography>
+              <Chip label="вычисляется системой" size="small" variant="outlined" />
+            </Stack>
+            <Stack direction="row" spacing={4} flexWrap="wrap">
+              {traits.abilities.map((ability) => (
+                <Stack key={ability.label} alignItems="center" spacing={1} sx={{ width: 120 }}>
+                  <svg width="52" height="52" viewBox="0 0 52 52">
+                    <circle cx="26" cy="26" r="21" fill="none" stroke={alpha(brand.stone2, 0.16)} strokeWidth="6" />
+                    <circle
+                      cx="26" cy="26" r="21" fill="none" stroke={brand.teal} strokeWidth="6" strokeLinecap="round"
+                      strokeDasharray={131.9}
+                      strokeDashoffset={131.9 * (1 - ability.percent / 100)}
+                      transform="rotate(-90 26 26)"
+                    />
+                    <text x="26" y="31" textAnchor="middle" fontFamily="Manrope, sans-serif" fontWeight={800} fontSize={13}>{ability.percent}%</text>
+                  </svg>
+                  <Typography variant="caption" textAlign="center" color="text.secondary">{ability.label}</Typography>
+                </Stack>
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent>
+            <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>Навыки</Typography>
+            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
+              {traits.selfRatedSkills.map((skill) => (
+                <Chip key={skill.label} label={`${skill.label} · ${skill.level}`} size="small" />
+              ))}
+            </Stack>
+            <Typography variant="caption" color="text.disabled">с самооценкой · 1 — начальный, 4 — экспертный</Typography>
+          </CardContent>
+        </Card>
+      </Stack>
     </Box>
   );
 }
@@ -1363,7 +2067,9 @@ function MentorChatPanel({
   session,
   message,
   onMessage,
-  onSend
+  onSend,
+  sending = false,
+  pendingMessage
 }: {
   title: string;
   caseTitle: string;
@@ -1372,6 +2078,8 @@ function MentorChatPanel({
   message: string;
   onMessage: (value: string) => void;
   onSend: () => void;
+  sending?: boolean;
+  pendingMessage?: string;
 }) {
   return (
     <Card sx={{ height: '100%' }}>
@@ -1423,11 +2131,41 @@ function MentorChatPanel({
               </Stack>
             );
           })}
-          {!session && <EmptyState title="Чат готов" description="Задайте вопрос по цели, структуре решения или проверке гипотез." />}
+          {sending && pendingMessage && (
+            <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ flexDirection: 'row-reverse', alignSelf: 'flex-end', maxWidth: '88%' }}>
+              <Box sx={{ width: 32, height: 32, borderRadius: 1.5, flexShrink: 0, display: 'grid', placeItems: 'center', bgcolor: 'secondary.main', color: 'white', fontWeight: 700, fontSize: 14 }}>Вы</Box>
+              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'primary.main', color: 'white', opacity: 0.7 }}>
+                <Typography variant="caption" fontWeight={600} sx={{ display: 'block', mb: 0.5, color: alpha('#fff', 0.85) }}>Вы</Typography>
+                <Typography variant="body2" sx={{ whiteSpace: 'pre-line' }}>{pendingMessage}</Typography>
+              </Box>
+            </Stack>
+          )}
+          {sending && (
+            <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ alignSelf: 'flex-start', maxWidth: '88%' }}>
+              <Box sx={{ width: 32, height: 32, borderRadius: 1.5, flexShrink: 0, display: 'grid', placeItems: 'center', bgcolor: 'primary.main', color: 'white' }}>
+                <SmartToyRoundedIcon sx={{ fontSize: 18 }} />
+              </Box>
+              <Box sx={{ p: 2, borderRadius: 2, bgcolor: 'background.default', border: '1px solid', borderColor: 'divider', display: 'flex', alignItems: 'center', gap: 1 }}>
+                <CircularProgress size={14} />
+                <Typography variant="body2" color="text.secondary">Наставник печатает…</Typography>
+              </Box>
+            </Stack>
+          )}
+          {!session && !sending && <EmptyState title="Чат готов" description="Задайте вопрос по цели, структуре решения или проверке гипотез." />}
         </Stack>
         <Stack direction="row" spacing={1.5}>
-          <TextField value={message} onChange={(event) => onMessage(event.target.value)} placeholder="Помоги проверить структуру решения" fullWidth size="small" />
-          <Button variant="contained" onClick={onSend} sx={{ px: 3 }}><SendRoundedIcon /></Button>
+          <TextField
+            value={message}
+            onChange={(event) => onMessage(event.target.value)}
+            onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); onSend(); } }}
+            placeholder="Помоги проверить структуру решения"
+            fullWidth
+            size="small"
+            disabled={sending}
+          />
+          <Button variant="contained" onClick={onSend} disabled={sending || !message.trim()} sx={{ px: 3 }}>
+            {sending ? <CircularProgress size={20} color="inherit" /> : <SendRoundedIcon />}
+          </Button>
         </Stack>
       </CardContent>
     </Card>

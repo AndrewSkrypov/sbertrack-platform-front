@@ -13,5 +13,6 @@ interface AgentDataPort {
     fun findMasterPromptById(id: UUID): MasterPrompt?
     fun saveMasterPrompt(masterPrompt: MasterPrompt): MasterPrompt
     fun findSessionById(id: UUID): AgentSession?
+    fun findLatestSession(studentId: UUID, agentId: UUID, caseId: UUID?): AgentSession?
     fun saveSession(agentSession: AgentSession): AgentSession
 }

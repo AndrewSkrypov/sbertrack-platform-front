@@ -8,6 +8,7 @@ import ru.itech.sbertrack.platform.common.model.Competency
 import ru.itech.sbertrack.platform.cvbook.domain.model.CvBookCandidate
 import ru.itech.sbertrack.platform.cvbook.domain.model.PriorityStatus
 import ru.itech.sbertrack.platform.cvbook.domain.port.CvBookDataPort
+import ru.itech.sbertrack.platform.notification.domain.port.NotificationPort
 import ru.itech.sbertrack.platform.portfolio.domain.model.Portfolio
 import ru.itech.sbertrack.platform.portfolio.domain.port.PortfolioDataPort
 import ru.itech.sbertrack.platform.submission.application.mapper.SubmissionMapper
@@ -30,6 +31,7 @@ class SubmissionService(
     private val userDataPort: UserDataPort,
     private val submissionMapper: SubmissionMapper,
     private val authService: AuthService,
+    private val notificationPort: NotificationPort,
 ) {
     fun list(caseId: UUID?, studentId: UUID?, status: SubmissionStatus?): List<SubmissionResponse> =
         submissionDataPort.list()
@@ -101,7 +103,11 @@ class SubmissionService(
 
     fun attachFeedback(submissionId: UUID, feedbackId: UUID, status: SubmissionStatus?): Submission {
         val submission = findDomain(submissionId)
-        return submissionDataPort.save(submission.addFeedback(feedbackId, status ?: submission.status))
+        val updated = submissionDataPort.save(submission.addFeedback(feedbackId, status ?: submission.status))
+        if (status != null && status != submission.status) {
+            notifyStatusChange(updated)
+        }
+        return updated
     }
 
     fun attachReflection(submissionId: UUID, reflectionId: UUID): Submission {
@@ -145,4 +151,21 @@ class SubmissionService(
         Competency.entries.associateWith { competency ->
             (((current[competency] ?: 0) + (delta[competency] ?: 0)) / 2).coerceAtMost(100)
         }
+
+    private fun notifyStatusChange(submission: Submission) {
+        val student = userDataPort.findById(submission.studentId) ?: return
+        val statusLabel = when (submission.status) {
+            SubmissionStatus.ACCEPTED -> "принято"
+            SubmissionStatus.REJECTED -> "отклонено"
+            SubmissionStatus.NEEDS_IMPROVEMENT -> "отправлено на доработку"
+            SubmissionStatus.PRIORITY_CANDIDATE -> "отмечено как приоритетное"
+            else -> return
+        }
+        notificationPort.send(
+            toEmail = student.email,
+            subject = "Обновление по решению «${submission.title}»",
+            body = "Здравствуйте, ${student.fullName}!\n\nВаше решение «${submission.title}» $statusLabel. " +
+                "Загляните на платформу, чтобы посмотреть подробную обратную связь.",
+        )
+    }
 }

@@ -16,7 +16,10 @@ import {
   CaseDetailsPage,
   PortfolioPage,
   ReflectionPage,
+  StudentAnalyticsPage,
   StudentDashboardPage,
+  StudentNewsPage,
+  StudentProfilePage,
   StudentRoadmapPage,
   StudentTrajectoryTreePage,
   StudentWorkspacePage,
@@ -37,6 +40,9 @@ export function AppRoutes() {
         <Route element={<AppShell />}>
           <Route element={<RoleGuard roles={['STUDENT']} />}>
             <Route path="/student/dashboard" element={<StudentDashboardPage />} />
+            <Route path="/student/news" element={<StudentNewsPage />} />
+            <Route path="/student/analytics" element={<StudentAnalyticsPage />} />
+            <Route path="/student/profile" element={<StudentProfilePage />} />
             <Route path="/student/tracks" element={<TrackCatalogPage />} />
             <Route path="/student/tracks/:id" element={<TrackDetailsPage />} />
             <Route path="/student/cases/:id" element={<CaseDetailsPage />} />

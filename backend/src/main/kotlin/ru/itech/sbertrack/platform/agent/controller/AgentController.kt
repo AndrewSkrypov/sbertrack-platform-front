@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import ru.itech.sbertrack.platform.agent.application.service.AgentService
 import ru.itech.sbertrack.platform.agent.dto.request.AgentMessageRequest
@@ -40,6 +41,14 @@ class AgentController(
     @GetMapping("/sessions/{id}")
     fun getSession(@PathVariable id: UUID): AgentSessionResponse =
         agentService.getSession(id)
+
+    @GetMapping("/sessions/latest")
+    fun getLatestSession(
+        @RequestParam agentId: UUID,
+        @RequestParam(required = false) caseId: UUID?,
+        @RequestHeader("Authorization", required = false) authorization: String?,
+    ): AgentSessionResponse? =
+        agentService.findLatestSession(agentId, caseId, authorization)
 
     @PostMapping("/sessions/{id}/messages")
     fun sendMessage(@PathVariable id: UUID, @Valid @RequestBody request: AgentMessageRequest): AgentSessionResponse =

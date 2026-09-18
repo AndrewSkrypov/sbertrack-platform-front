@@ -1,0 +1,6 @@
+-- UUIDs are deterministic and must match MockPlatformDataStore.id("submission-*"/"case-*").
+-- feedback_ids reference the feedback module, which is not migrated yet and still
+-- lives in MockPlatformDataStore.
+insert into submissions (id, case_id, student_id, team_name, title, description, artifact_url, status, competency_scores, feedback_ids, reflection_id, submitted_at) values
+('9f07c560-0e4a-3c1e-91fb-3f6fc4d52ecf', '26de51a4-d00a-39ec-b759-dd7f2574a6f1', '1252bd86-4b43-3453-9706-e48ddeaa484b', 'Команда Domain First', 'Backend-архитектура платформы кейсов', 'Предложены доменные модули, REST API, in-memory адаптеры и схема будущей интеграции.', 'Архитектурная схема backend.pdf', 'ACCEPTED', '{"ABSTRACT_THINKING":86,"AUTONOMY":80,"COLLABORATION":70,"HUMAN_AI_SYNERGY":84,"HYPOTHESIS_AND_PRODUCT_THINKING":78}', '["ec329b1e-ed10-35e7-b4a7-005dc9b2bf0b"]', null, '2026-06-12T12:00:00Z'),
+('0640a0a5-5712-313a-8dbd-eccaca62d0c0', '01bd3485-b451-3748-be71-8475955f7b4d', '4da21b81-b116-3e41-b6d6-75700866a740', 'Career Research', 'Анализ рынка карьерных платформ', 'Собрана карта конкурентов и выделены возможности для витрины кандидатов.', 'Анализ карьерных платформ.xlsx', 'SUBMITTED', '{"ABSTRACT_THINKING":76,"AUTONOMY":82,"COLLABORATION":65,"HUMAN_AI_SYNERGY":70,"HYPOTHESIS_AND_PRODUCT_THINKING":78}', '[]', null, '2026-06-18T10:20:00Z');

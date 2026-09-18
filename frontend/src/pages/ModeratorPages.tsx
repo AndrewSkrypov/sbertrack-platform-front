@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { get, platformApi, post, put } from '../api/client';
 import { BarChartBlock, LineChartBlock, MetricGrid, PieChartBlock } from '../components/AnalyticsCharts';
 import { EmptyState } from '../components/EmptyState';
+import { ErrorState } from '../components/ErrorState';
 import { LoadingBlock } from '../components/LoadingBlock';
 import { PageHeader } from '../components/PageHeader';
 import { StatCard } from '../components/StatCard';
@@ -35,7 +36,7 @@ import {
 
 export function ModeratorDashboardPage() {
   const navigate = useNavigate();
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [analytics, cases, agents, prompts, feedback] = await Promise.all([
       platformApi.analytics.moderatorDashboard(),
       get<PracticalCase[]>('/moderation/cases'),
@@ -56,6 +57,7 @@ export function ModeratorDashboardPage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
@@ -116,7 +118,7 @@ export function ModeratorDashboardPage() {
 }
 
 export function AgentManagementPage() {
-  const { data, loading } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [agents, analytics, prompts] = await Promise.all([
       get<AgentDefinition[]>('/agents'),
       platformApi.analytics.moderatorDashboard(),
@@ -124,6 +126,7 @@ export function AgentManagementPage() {
     ]);
     return { agents, analytics, prompts };
   }, []);
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   return (
     <Box>
@@ -181,7 +184,7 @@ export function AgentManagementPage() {
 }
 
 export function MasterPromptManagementPage() {
-  const { data, loading, reload } = useApi(async () => {
+  const { data, loading, error, reload } = useApi(async () => {
     const [prompts, agents] = await Promise.all([get<MasterPrompt[]>('/master-prompts'), get<AgentDefinition[]>('/agents')]);
     return { prompts, agents };
   }, []);
@@ -227,6 +230,7 @@ export function MasterPromptManagementPage() {
     await reload();
   }
 
+  if (error) return <ErrorState message={error} onRetry={reload} />;
   if (loading || !data) return <LoadingBlock />;
   const agentsById = new Map(data.agents.map((agent) => [agent.id, agent]));
   return (
